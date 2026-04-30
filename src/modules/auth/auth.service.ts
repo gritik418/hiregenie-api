@@ -1,13 +1,24 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { PrismaService } from 'src/database/prisma/prisma.service';
 import RegisterInputDto from './dto/register.dto';
 import { HashingService } from 'src/common/hashing/hashing.service';
+import LoginInputDto from './dto/login.dto';
+import { Response } from 'express';
+import { AUTH_COOKIE_NAME } from 'src/common/constants/cookie-names';
+import { cookieOptions } from 'src/common/constants/cookie-options';
+import { JwtService } from '@nestjs/jwt';
+import JWTPayload from './types/jwt-payload.type';
 
 @Injectable()
 export class AuthService {
   constructor(
     private readonly prismaService: PrismaService,
     private readonly hashingService: HashingService,
+    private readonly jwtService: JwtService,
   ) {}
 
   async register(data: RegisterInputDto) {
@@ -67,6 +78,52 @@ export class AuthService {
     return {
       success: true,
       message: 'User registered successfully. Check email for verification.',
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+      },
+    };
+  }
+
+  async login(data: LoginInputDto, res: Response) {
+    const { email, password } = data;
+
+    const user = await this.prismaService.user.findUnique({
+      where: {
+        email,
+        isEmailVerified: true,
+      },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        password: true,
+      },
+    });
+
+    if (!user) throw new UnauthorizedException('Invalid credentials.');
+
+    const isPasswordValid = await this.hashingService.compareValue(
+      password,
+      user.password,
+    );
+
+    if (!isPasswordValid)
+      throw new UnauthorizedException('Invalid credentials.');
+
+    const payload: JWTPayload = {
+      id: user.id,
+      email: user.email,
+    };
+
+    const token = this.jwtService.sign(payload);
+
+    res.cookie(AUTH_COOKIE_NAME, token, cookieOptions);
+
+    return {
+      success: true,
+      message: 'Logged in successfully.',
       user: {
         id: user.id,
         name: user.name,
