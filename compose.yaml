@@ -1,0 +1,39 @@
+services:
+  hire-genie-api:
+    image: hire-genie-api:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: hire-genie-api
+    ports:
+      - '3000:3000'
+    networks:
+      - hiregenie-network
+    env_file:
+      - .env
+    depends_on:
+      - db
+    restart: unless-stopped
+
+  db:
+    image: postgres:16-alpine
+    container_name: hire-genie-db
+    ports:
+      - '5432:5432'
+    environment:
+      - POSTGRES_USER=hiregenie
+      - POSTGRES_PASSWORD=hiregenie123
+      - POSTGRES_DB=hiregenie
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - hiregenie-network
+
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+
+networks:
+  hiregenie-network:
+    driver: bridge
