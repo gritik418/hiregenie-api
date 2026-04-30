@@ -50,4 +50,30 @@ export class ResumeService {
       },
     };
   }
+
+  async getResumes(req: Request) {
+    const userId = req.user?.id;
+
+    if (!userId) throw new BadRequestException('Unauthenticated.');
+
+    const resumes = await this.prismaService.resume.findMany({
+      where: {
+        userId,
+      },
+      select: {
+        id: true,
+        fileName: true,
+        fileSize: true,
+        fileType: true,
+        fileUrl: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+    });
+
+    return { success: true, message: 'Resumes fetched successfully.', resumes };
+  }
 }

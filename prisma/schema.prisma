@@ -35,8 +35,7 @@ model Resume {
   fileUrl    String
   publicId   String  
 
-  fileName   String?
-  originalName String?
+  fileName   String
   fileSize   Int?
   fileType String?
 

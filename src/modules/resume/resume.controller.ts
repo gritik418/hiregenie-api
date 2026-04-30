@@ -5,6 +5,9 @@ import {
   Post,
   Req,
   UseGuards,
+  HttpCode,
+  HttpStatus,
+  Get,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ResumeService } from './resume.service';
@@ -17,8 +20,15 @@ export class ResumeController {
   constructor(private readonly resumeService: ResumeService) {}
 
   @Post('upload')
+  @HttpCode(HttpStatus.CREATED)
   @UseInterceptors(FileInterceptor('file'))
   uploadResume(@UploadedFile() file: Express.Multer.File, @Req() req: Request) {
     return this.resumeService.uploadResume(file, req);
+  }
+
+  @Get()
+  @HttpCode(HttpStatus.OK)
+  getResumes(@Req() req: Request) {
+    return this.resumeService.getResumes(req);
   }
 }
