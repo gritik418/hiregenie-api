@@ -9,6 +9,7 @@ import { AuthModule } from './modules/auth/auth.module';
 import { ResumeModule } from './modules/resume/resume.module';
 import { UserModule } from './modules/user/user.module';
 import { ResumeAnalysisModule } from './modules/resume-analysis/resume-analysis.module';
+import { AiEngineModule } from './modules/ai-engine/ai-engine.module';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { ResumeAnalysisModule } from './modules/resume-analysis/resume-analysis.
     CloudinaryModule,
     UserModule,
     ResumeAnalysisModule,
+    AiEngineModule,
   ],
   controllers: [AppController],
   providers: [AppService],

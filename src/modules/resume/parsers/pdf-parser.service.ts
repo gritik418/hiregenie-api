@@ -7,16 +7,10 @@ import { PDFParse } from 'pdf-parse';
 export class PdfParserService {
   constructor(private readonly prismaService: PrismaService) {}
 
-  async parseFromURL(resumeId: string) {
-    const resume = await this.prismaService.resume.findUnique({
-      where: {
-        id: resumeId,
-      },
-    });
+  async parseFromURL(fileUrl: string) {
+    if (!fileUrl) throw new BadRequestException('File not found.');
 
-    if (!resume) throw new BadRequestException('File not found.');
-
-    const response = await axios.get(resume.fileUrl, {
+    const response = await axios.get(fileUrl, {
       responseType: 'arraybuffer',
     });
 

@@ -19,7 +19,7 @@ COPY package*.json ./
 
 WORKDIR /usr/src/app
 
-RUN npm ci --omit=dev
+RUN npm install
 
 COPY --from=builder /usr/src/app/dist ./dist
 COPY --from=builder /usr/src/app/prisma.config.ts ./prisma.config.ts
