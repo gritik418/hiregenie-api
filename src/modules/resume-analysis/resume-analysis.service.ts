@@ -20,6 +20,21 @@ export class ResumeAnalysisService {
     if (!resume || !resume.fileUrl)
       throw new BadRequestException('Resume not found.');
 
+    const existingAnalysis = await this.prismaService.resumeAnalysis.findFirst({
+      where: {
+        resumeId: resume.id,
+        status: 'COMPLETED',
+      },
+    });
+
+    if (existingAnalysis) {
+      return {
+        success: true,
+        message: 'Resume already analyzed',
+        analysis: existingAnalysis,
+      };
+    }
+
     let rawText = resume.rawText || '';
 
     if (!rawText) {
@@ -34,10 +49,30 @@ export class ResumeAnalysisService {
       });
     }
 
-    const data = await this.aiEngineService.analyzeResume(rawText);
+    const data = await this.aiEngineService.generateResumeAnalysis(rawText);
 
-    if (!data) throw new BadRequestException('Failed to analyze resume');
+    if (!data) {
+      await this.prismaService.resumeAnalysis.create({
+        data: {
+          resumeId: resume.id,
+          userId: resume.userId,
+          status: 'FAILED',
+          summary: 'Failed to analyze resume',
+          reason: 'Failed to analyze resume',
+        },
+      });
+      throw new BadRequestException('Failed to analyze resume');
+    }
 
-    return { success: true, message: 'Resume analyzed successfully', data };
+    const analysis = await this.prismaService.resumeAnalysis.create({
+      data: {
+        resumeId: resume.id,
+        userId: resume.userId,
+        status: 'COMPLETED',
+        ...data,
+      },
+    });
+
+    return { success: true, message: 'Resume analyzed successfully', analysis };
   }
 }

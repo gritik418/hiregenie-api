@@ -56,13 +56,17 @@ model ResumeAnalysis {
 
   status        AnalysisStatus @default(PROCESSING)
 
-  score         Int?     
+  score         Int?  
+  breakdown Json?   
+  recommendedRoles Json?
   strengths String[]
-  feedback Json?
-  weaknesses      String[]    // AI response (structured)
-  suggestions   String[]       // improvements
-  keywords      String[]    // extracted keywords
-  reason      String    
+  weaknesses      String[] 
+  gaps            String[]
+  suggestions   String[]      
+  keywords      Json?    
+  summary       String    
+  reason        String
+  feedback      Json?
 
   user          User        @relation(fields: [userId], references: [id])
   resume        Resume      @relation(fields: [resumeId], references: [id])

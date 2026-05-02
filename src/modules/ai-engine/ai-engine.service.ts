@@ -8,18 +8,19 @@ export class AiEngineService {
     baseUrl: process.env.OLLAMA_BASE_URL as string,
   });
 
-  async analyzeResume(rawText: string) {
+  async generateResumeAnalysis(rawText: string) {
     const prompt = `
 You are an expert technical recruiter.
 
 Analyze the resume and return ONLY valid JSON.
 
 STRICT OUTPUT RULES:
-- Do NOT explain anything
+- Your entire response MUST be a single valid JSON object
+- Do NOT include any text before or after JSON
 - Do NOT include markdown
 - Do NOT use \`\`\`
 - Do NOT return schema
-- Output MUST be valid JSON only
+- Do NOT add explanations
 - All fields are REQUIRED
 - Use valid JSON (no trailing commas, no comments)
 
@@ -47,14 +48,18 @@ FORMAT:
     "missing": string[]
   },
   "summary": string,
-  "reason": string
+  "reason": string,
+  "feedback": {
+    "summary": string,
+    "highlights": string[],
+    "areasToImprove": string[]
+  }
 }
 
 EXPERIENCE DETECTION (VERY IMPORTANT):
 - Determine total professional experience from the resume
 - Internships count but indicate entry-level
 - If total experience < 1 year → classify as "Intern/Entry Level"
-- This classification MUST control roles and summary
 
 HARD EXPERIENCE RULES (MANDATORY):
 - < 1 year → ONLY Intern or Junior roles allowed
@@ -72,7 +77,7 @@ ROLE RULES:
 - Suggest up to 3 relevant roles (1–3 allowed)
 - Roles MUST strictly follow experience level
 - Roles must match skills in resume
-- Do NOT include unrelated roles (e.g. DevOps without infra experience)
+- Do NOT include unrelated roles
 
 STRENGTHS:
 - Provide meaningful strengths based on resume
@@ -88,7 +93,7 @@ GAPS:
 - If no major gaps → return empty array
 
 SUGGESTIONS:
-- Provide actionable suggestions (tools, projects, learning)
+- Provide actionable suggestions (tools, technologies, projects)
 - Avoid vague advice
 
 KEYWORDS:
@@ -100,6 +105,20 @@ SUMMARY:
 - 2–3 lines
 - MUST reflect actual experience level (Intern / Junior / Mid)
 - NEVER use "Senior", "Expert", or "Architect" for < 3 years experience
+
+FEEDBACK RULES (STRICT):
+- feedback.summary MUST be 1–2 lines, human-readable evaluation
+- feedback.highlights MUST contain 2–4 concise bullet points
+- feedback.areasToImprove MUST contain 2–4 actionable points
+
+- DO NOT repeat strengths, weaknesses, or suggestions word-for-word
+- DO NOT leave any feedback field empty
+- Keep feedback concise and clear
+- feedback must sound like a real recruiter’s evaluation
+
+CRITICAL:
+- Output MUST be valid JSON
+- If unsure, still return best possible valid JSON
 
 RESUME:
 ${rawText.slice(0, 5000)}
