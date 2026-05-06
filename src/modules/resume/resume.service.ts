@@ -68,6 +68,7 @@ export class ResumeService {
         fileUrl: true,
         createdAt: true,
         updatedAt: true,
+        rawText: true,
       },
       orderBy: {
         createdAt: 'desc',

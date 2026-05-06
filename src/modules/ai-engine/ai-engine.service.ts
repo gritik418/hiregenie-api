@@ -1,5 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { ChatOllama } from '@langchain/ollama';
+import ResumeAnalysisResponseSchema from '../resume-analysis/schemas/resumeAnalysisResponse.schema';
+import ResumeAnalysisOutputDto from '../resume-analysis/dto/resumeAnalysisOutput.dto';
+import MatchResumeInputDto from '../resume-analysis/dto/matchResume.dto';
+import { ZodSchema } from 'zod';
+import MatchResumeAnalysisOutputDto from '../resume-analysis/dto/matchResumeAnalysisOutput.dto';
+import MatchResumeResponseSchema from '../resume-analysis/schemas/matchResumeResponse.schema';
 
 @Injectable()
 export class AiEngineService {
@@ -8,7 +14,9 @@ export class AiEngineService {
     baseUrl: process.env.OLLAMA_BASE_URL as string,
   });
 
-  async generateResumeAnalysis(rawText: string) {
+  async generateResumeAnalysis(
+    rawText: string,
+  ): Promise<ResumeAnalysisOutputDto> {
     const prompt = `
 You are an expert technical recruiter.
 
@@ -26,17 +34,17 @@ STRICT OUTPUT RULES:
 
 FORMAT:
 {
-  "score": number,
+  "score": number (0 - 100),
   "breakdown": {
-    "keywords": number,
-    "experience": number,
-    "projects": number,
-    "formatting": number
+    "keywords": number (0 - 100),
+    "experience": number (0 - 100),
+    "projects": number (0 - 100),
+    "formatting": number (0 - 100)
   },
   "recommendedRoles": [
     {
       "title": string,
-      "confidence": number
+      "confidence": number (0 - 100)
     }
   ],
   "strengths": string[],
@@ -133,18 +141,134 @@ ${rawText.slice(0, 5000)}
 
     const raw = response.content.toString();
 
-    const result = this.extractJSON(raw);
+    const result = this.extractJSON<ResumeAnalysisOutputDto>(
+      raw,
+      ResumeAnalysisResponseSchema,
+    );
 
     return result;
   }
 
-  private extractJSON(text: string) {
+  async matchResume(rawText: string, data: MatchResumeInputDto) {
+    const prompt = `
+You are an expert technical recruiter and AI assistant. Your task is to evaluate a candidate's resume strictly against a target role.
+
+### STRICT OUTPUT RULES
+- Your entire response MUST be a single valid JSON object.
+- Do NOT include any text before or after JSON.
+- Do NOT include markdown blocks like \`\`\`json.
+- Do NOT return schema definitions.
+- Do NOT add explanations or comments.
+- All fields are REQUIRED. If a value is unknown, use null for numbers/booleans or empty arrays/strings.
+- Ensure all "breakdown" values and "matchScore" are raw NUMBERS, not strings.
+
+### INPUT
+- TARGET_ROLE: ${data.jobTitle ?? 'Unknown Role'}
+- JOB_DESCRIPTION: ${data.jobDescription ?? 'Not provided'}
+- REQUIRED_EXPERIENCE: ${data.experienceRequired ?? 'Not explicitly required'}
+- SOURCE_TEXT (RESUME): ${rawText.slice(0, 5000)}
+
+### ANALYSIS RULES (STRICT STRICT STRICT)
+1. **NO ASSUMPTIONS**: Extract information ONLY from the provided SOURCE_TEXT. Do not guess or hallucinate skills, experience, or education.
+2. **EXPERIENCE FOCUS**:
+   - Accurately calculate the candidate's total years of experience strictly from dates in the resume.
+   - Compare candidate experience directly to REQUIRED_EXPERIENCE.
+   - If candidate's experience falls short of REQUIRED_EXPERIENCE, "meetsRequirement" MUST be false.
+3. **PROPER SCORING**:
+   - \`matchScore\` (0-100): Overall fit based on skills, experience, projects, and education.
+   - \`breakdown\` scores (0-100 or null): Individual scores. Only score what is present.
+   - Penalize the score if experience or core skills are lacking.
+   - \`alignmentScore\` (0-100): How closely the candidate's past roles align with the TARGET_ROLE.
+4. **FIT LEVEL**:
+   - Determine fitLevel as "LOW", "MODERATE", or "HIGH" based on the matchScore (e.g., < 50 LOW, 50-75 MODERATE, > 75 HIGH).
+5. **GAPS & WEAKNESSES**: Identify missing skills or experience explicitly. If REQUIRED_EXPERIENCE is unmet, it's a major gap.
+
+### OUTPUT SCHEMA
+{
+  "matchScore": number (0-100),
+  "fitLevel": "LOW", "MODERATE", or "HIGH",
+  "breakdown": {
+    "skills": number (0-100) or null,
+    "experience": number (0-100) or null,
+    "projects": number (0-100) or null,
+    "education": number (0-100) or null
+  },
+  "skills": {
+    "matched": array of strings,
+    "missing": array of strings,
+    "partial": array of strings
+  },
+  "experience": {
+    "requiredYears": number or null,
+    "candidateYears": number or null,
+    "meetsRequirement": boolean or null,
+    "notes": string
+  },
+  "roleFit": {
+    "targetRole": string,
+    "matchedRoles": array of strings,
+    "alignmentScore": number (0-100)
+  },
+  "gaps": array of strings,
+  "suggestions": array of strings,
+  "learningPath": array of strings,
+  "summary": string,
+  "reason": string,
+  "feedback": {
+    "summary": string,
+    "highlights": array of strings
+  }
+}
+
+### FINAL COMPILATION RULE
+Return ONLY the JSON object. 
+- DO NOT add comments starting with // or /*.
+- DO NOT explain your scoring.
+- DO NOT use markdown code blocks.
+- If you use any text outside the JSON, the parser will crash.
+`;
+
+    console.log('prompt ->', prompt, '\n\n');
+
+    const response = await this.model.invoke([
+      {
+        role: 'user',
+        content: prompt,
+      },
+    ]);
+
+    const raw = response.content.toString();
+
+    const result = this.extractJSON<MatchResumeAnalysisOutputDto>(
+      raw,
+      MatchResumeResponseSchema,
+    );
+
+    return result;
+  }
+
+  private extractJSON<T>(text: string, schema: ZodSchema): T {
     try {
-      const match = text.match(/\{[\s\S]*\}/);
+      if (!text) throw new Error('Empty AI response');
+
+      let clean = text
+        .replace(/```json/g, '')
+        .replace(/```/g, '')
+        .trim();
+
+      const match = clean.match(/\{[\s\S]*\}/);
       if (!match) throw new Error('No JSON found');
 
-      return JSON.parse(match[0]);
-    } catch {
+      const jsonString = match[0];
+
+      const parsed = JSON.parse(jsonString); // 🔥 THIS WAS MISSING
+
+      const validated = schema.parse(parsed); // now correct type
+
+      return validated as T;
+    } catch (e) {
+      console.error('Raw AI output:', text);
+      console.error('Error:', e);
       throw new Error('Invalid AI response');
     }
   }

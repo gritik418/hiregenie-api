@@ -13,7 +13,8 @@ services:
       - .env
     volumes:
       - .:/usr/src/app
-      - ./node_modules:/usr/src/app/node_modules
+      - /usr/src/app/node_modules
+    command: sh -c "npx prisma generate && npx prisma db push --accept-data-loss && npm run start:dev"
     depends_on:
       - db
     restart: unless-stopped

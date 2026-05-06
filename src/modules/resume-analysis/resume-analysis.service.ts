@@ -2,6 +2,7 @@ import { BadRequestException, Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/database/prisma/prisma.service';
 import { PdfParserService } from '../resume/parsers/pdf-parser.service';
 import { AiEngineService } from '../ai-engine/ai-engine.service';
+import MatchResumeInputDto from './dto/matchResume.dto';
 
 @Injectable()
 export class ResumeAnalysisService {
@@ -74,5 +75,34 @@ export class ResumeAnalysisService {
     });
 
     return { success: true, message: 'Resume analyzed successfully', analysis };
+  }
+
+  async matchResume(resumeId: string, data: MatchResumeInputDto) {
+    const resume = await this.prismaService.resume.findUnique({
+      where: {
+        id: resumeId,
+      },
+    });
+
+    if (!resume || !resume.fileUrl)
+      throw new BadRequestException('Resume not found.');
+
+    let rawText = resume.rawText || '';
+
+    if (!rawText) {
+      rawText = await this.pdfParserService.parseFromURL(resume.fileUrl);
+      await this.prismaService.resume.update({
+        where: {
+          id: resumeId,
+        },
+        data: {
+          rawText,
+        },
+      });
+    }
+
+    const analysis = await this.aiEngineService.matchResume(rawText, data);
+
+    return { success: true, message: 'Resume matched successfully', analysis };
   }
 }
