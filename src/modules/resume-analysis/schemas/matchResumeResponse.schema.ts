@@ -3,12 +3,14 @@ import z from 'zod';
 const MatchResumeResponseSchema = z.object({
   matchScore: z.number(),
   fitLevel: z.enum(['LOW', 'MODERATE', 'HIGH']),
-  breakdown: z.object({
-    skills: z.number().nullable(),
-    experience: z.number().nullable(),
-    projects: z.number().nullable(),
-    education: z.number().nullable(),
-  }),
+  breakdown: z
+    .object({
+      skills: z.number().nullable(),
+      experience: z.number().nullable(),
+      projects: z.number().nullable(),
+      education: z.number().nullable(),
+    })
+    .optional(),
   skills: z.object({
     matched: z.array(z.string()),
     missing: z.array(z.string()),

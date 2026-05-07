@@ -151,84 +151,129 @@ ${rawText.slice(0, 5000)}
 
   async matchResume(rawText: string, data: MatchResumeInputDto) {
     const prompt = `
-You are an expert technical recruiter and AI assistant. Your task is to evaluate a candidate's resume strictly against a target role.
+You are an expert technical recruiter.
 
-### STRICT OUTPUT RULES
-- Your entire response MUST be a single valid JSON object.
-- Do NOT include any text before or after JSON.
-- Do NOT include markdown blocks like \`\`\`json.
-- Do NOT return schema definitions.
-- Do NOT add explanations or comments.
-- All fields are REQUIRED. If a value is unknown, use null for numbers/booleans or empty arrays/strings.
-- Ensure all "breakdown" values and "matchScore" are raw NUMBERS, not strings.
+Analyze the candidate resume against the target job role.
 
-### INPUT
-- TARGET_ROLE: ${data.jobTitle ?? 'Unknown Role'}
-- JOB_DESCRIPTION: ${data.jobDescription ?? 'Not provided'}
-- REQUIRED_EXPERIENCE: ${data.experienceRequired ?? 'Not explicitly required'}
-- SOURCE_TEXT (RESUME): ${rawText.slice(0, 5000)}
+Return ONLY valid JSON.
 
-### ANALYSIS RULES (STRICT STRICT STRICT)
-1. **NO ASSUMPTIONS**: Extract information ONLY from the provided SOURCE_TEXT. Do not guess or hallucinate skills, experience, or education.
-2. **EXPERIENCE FOCUS**:
-   - Accurately calculate the candidate's total years of experience strictly from dates in the resume.
-   - Compare candidate experience directly to REQUIRED_EXPERIENCE.
-   - If candidate's experience falls short of REQUIRED_EXPERIENCE, "meetsRequirement" MUST be false.
-3. **PROPER SCORING**:
-   - \`matchScore\` (0-100): Overall fit based on skills, experience, projects, and education.
-   - \`breakdown\` scores (0-100 or null): Individual scores. Only score what is present.
-   - Penalize the score if experience or core skills are lacking.
-   - \`alignmentScore\` (0-100): How closely the candidate's past roles align with the TARGET_ROLE.
-4. **FIT LEVEL**:
-   - Determine fitLevel as "LOW", "MODERATE", or "HIGH" based on the matchScore (e.g., < 50 LOW, 50-75 MODERATE, > 75 HIGH).
-5. **GAPS & WEAKNESSES**: Identify missing skills or experience explicitly. If REQUIRED_EXPERIENCE is unmet, it's a major gap.
+STRICT RULES:
+- No markdown
+- No explanations
+- NO COMMENTS
+- No extra text
+- Output must be valid JSON
+- All fields are required
+- Do NOT change schema structure
+- Do NOT return invalid JSON
+- Use proper data types exactly as defined
+- Numerical fields can't be null or undefined, return 0
+- No value for string fields, return ""
 
-### OUTPUT SCHEMA
+JSON SCHEMA (MUST FOLLOW):  
 {
-  "matchScore": number (0-100),
-  "fitLevel": "LOW", "MODERATE", or "HIGH",
-  "breakdown": {
-    "skills": number (0-100) or null,
-    "experience": number (0-100) or null,
-    "projects": number (0-100) or null,
-    "education": number (0-100) or null
-  },
+  "matchScore": type number, // CAN'T BE NULL
+  "fitLevel": type string (LOW | MODERATE | HIGH),
   "skills": {
-    "matched": array of strings,
-    "missing": array of strings,
-    "partial": array of strings
+    "matched": type string[], 
+    "missing": type string[],
+    "partial": type string[] 
   },
   "experience": {
-    "requiredYears": number or null,
-    "candidateYears": number or null,
-    "meetsRequirement": boolean or null,
-    "notes": string
+    "requiredYears": type number | null,
+    "candidateYears": type number,
+    "meetsRequirement": type boolean,
+    "notes": type string
   },
   "roleFit": {
-    "targetRole": string,
-    "matchedRoles": array of strings,
-    "alignmentScore": number (0-100)
+    "targetRole": type string,
+    "matchedRoles": type string[],
+    "alignmentScore": type number // CAN'T BE NULL
   },
-  "gaps": array of strings,
-  "suggestions": array of strings,
-  "learningPath": array of strings,
-  "summary": string,
-  "reason": string,
+  "gaps": type string[],
+  "suggestions": type string[],
+  "learningPath": type string[],
+  "summary": type string,
+  "reason": type string,
   "feedback": {
-    "summary": string,
-    "highlights": array of strings
+    "summary": type string,
+    "highlights": type string[]
   }
 }
 
-### FINAL COMPILATION RULE
-Return ONLY the JSON object. 
-- DO NOT add comments starting with // or /*.
-- DO NOT explain your scoring.
-- DO NOT use markdown code blocks.
-- If you use any text outside the JSON, the parser will crash.
-`;
+MATCH SCORE RULES:
+- Must provide a score
+- 0-49 = LOW
+- 50-74 = MODERATE
+- 75-100 = HIGH
 
-    console.log('prompt ->', prompt, '\n\n');
+FIT LEVEL RULES:
+- matchScore < 50 → LOW
+- matchScore 50-74 → MODERATE
+- matchScore >= 75 → HIGH
+
+EXPERIENCE RULES:
+- ONLY use explicit experience from the resume
+- ONLY consider professional experience for candidateYears (Internships and Jobs only)
+- DO NOT assume years from skills or projects
+- Internships count as experience
+- If experience duration is unclear:
+  - candidateYears = 0
+- If required experience is not mentioned:
+  - requiredYears = null
+
+ROLE RULES:
+- Roles must match candidate skills and projects
+- Never suggest Senior roles under 3 years experience
+- Never suggest Lead or Architect roles under 5 years experience
+- Maximum 3 matched roles
+
+SCORING RULES:
+- matchScore and breakdown values must be integers between 0 and 100
+- skills = technical skill relevance
+- experience = experience relevance
+- projects = project quality and relevance
+- education = education relevance
+
+GAPS RULES:
+- Include important missing skills or experience gaps
+- Keep concise and realistic
+
+SUGGESTIONS RULES:
+- Must be actionable
+- Mention technologies, projects, certifications, or learning directions
+- Avoid generic advice
+
+SUMMARY RULES:
+- 2 to 3 lines summary
+- NO HTML
+
+FEEDBACK RULES:
+- feedback.summary is required, string format, NO HTML
+- feedback.highlights must contain 2-4 concise points, NO HTML
+- Feedback should sound like real recruiter evaluation
+
+REASON RULES:
+- Must be good enough to be shown to the candidate
+- IN HTML format
+- Upto 400 words (excluding html tags, use ' for styling)
+- MUST BE PROPERLY ENCLOSED IN "", DONT USE " Inside 
+
+TARGET ROLE:
+${data.jobTitle ?? 'Unknown'}
+
+JOB DESCRIPTION:
+${data.jobDescription ?? 'Not provided'}
+
+REQUIRED EXPERIENCE:
+${data.experienceRequired ?? 'Not provided'}
+
+CURRENT MONTH & YEAR: (FOR CANDIDATE'S EXPERIENCE CALCULATION):
+${new Date().getMonth()}, ${new Date().getFullYear()}
+
+RESUME:
+${rawText.slice(0, 5000)}
+`;
 
     const response = await this.model.invoke([
       {

@@ -10,6 +10,7 @@ import { ResumeModule } from './modules/resume/resume.module';
 import { UserModule } from './modules/user/user.module';
 import { ResumeAnalysisModule } from './modules/resume-analysis/resume-analysis.module';
 import { AiEngineModule } from './modules/ai-engine/ai-engine.module';
+import { AiInterviewModule } from './modules/ai-interview/ai-interview.module';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { AiEngineModule } from './modules/ai-engine/ai-engine.module';
     UserModule,
     ResumeAnalysisModule,
     AiEngineModule,
+    AiInterviewModule,
   ],
   controllers: [AppController],
   providers: [AppService],
