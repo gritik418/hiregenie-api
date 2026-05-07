@@ -4,4 +4,6 @@ import { PrismaService } from 'src/database/prisma/prisma.service';
 @Injectable()
 export class AiInterviewService {
   constructor(private readonly prismaService: PrismaService) {}
+
+  async conductAiInterview() {}
 }

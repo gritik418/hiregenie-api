@@ -56,9 +56,9 @@ model ResumeAnalysis {
 
   status        AnalysisStatus @default(PROCESSING)
 
-  score         Int?  
+  score         Int?  @default(0)
   breakdown Json?   
-  recommendedRoles Json?
+  recommendedRoles Json? 
   strengths String[]
   weaknesses      String[] 
   gaps            String[]
