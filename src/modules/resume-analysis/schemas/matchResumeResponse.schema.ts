@@ -18,7 +18,7 @@ const MatchResumeResponseSchema = z.object({
   }),
   experience: z.object({
     requiredYears: z.number().nullable(),
-    candidateYears: z.number().nullable(),
+    candidateExperience: z.number().nullable(),
     meetsRequirement: z.boolean().nullable(),
     notes: z.string().optional(),
   }),

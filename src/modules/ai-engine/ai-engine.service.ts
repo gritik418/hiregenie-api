@@ -46,8 +46,12 @@ export class AiEngineService {
       const validated = schema.parse(parsed);
 
       return validated as T;
-    } catch {
-      throw new BadRequestException('Invalid AI response');
+    } catch (e) {
+      throw new BadRequestException({
+        message: 'Invalid AI response',
+        e: e?.message,
+        text,
+      });
     }
   }
 }

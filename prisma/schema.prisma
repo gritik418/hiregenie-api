@@ -75,6 +75,45 @@ model ResumeAnalysis {
   updatedAt     DateTime    @updatedAt
 }
 
+model ResumeMatchAnalysis {
+  id                 String   @id @default(cuid())
+
+  resumeId           String?
+  userId             String?
+
+  targetRole         String
+  jobDescription     String?
+  requiredExperience Int?
+
+  matchScore         Int
+  fitLevel           FitLevel
+
+  skills Json?
+  experience         Json?
+  roleFit Json?
+
+  gaps String[]
+  suggestions String[]
+  learningPath String[]
+
+  summary String
+  reason String
+  feedback Json
+
+  
+  // projects           Json?
+  // education          Json?
+
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+}
+
+enum FitLevel {
+  LOW
+  MODERATE
+  HIGH
+}
+
 enum AnalysisStatus {
   PROCESSING
   COMPLETED

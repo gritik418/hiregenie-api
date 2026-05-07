@@ -241,21 +241,21 @@ export class ResumeAnalysisService {
     - Do NOT change schema structure
     - Do NOT return invalid JSON
     - Use proper data types exactly as defined
-    - Numerical fields can't be null or undefined, return 0
+    - Numerical fields can't be null or undefined, return 0, if no value for Numerical fields
     - No value for string fields, return ""
 
-    JSON SCHEMA (MUST FOLLOW):
+    JSON SCHEMA (MUST FOLLOW, NO COMMENTS IN JSON):
     {
       "matchScore": type number, // CAN'T BE NULL
       "fitLevel": type string (LOW | MODERATE | HIGH),
       "skills": {
-        "matched": type string[],
+        "matched": type string[], 
         "missing": type string[],
         "partial": type string[]
       },
       "experience": {
         "requiredYears": type number | null,
-        "candidateYears": type number,
+        "candidateExperience": type number,
         "meetsRequirement": type boolean,
         "notes": type string
       },
@@ -281,26 +281,97 @@ export class ResumeAnalysisService {
     - 50-74 = MODERATE
     - 75-100 = HIGH
 
+    SKILLS RULES:
+    - matched:
+      - Skills present in the resume that match the job requirements
+    - missing:
+      - Skills that should be there according to the job but are not found in the resume
+      - Must try to add atleast 2-3 missing skills
+    - partial:
+      - Skills weakly matched, indirectly related, briefly mentioned, or lacking practical/project evidence
+      - Must try to add atleast 2-3 partial skills only if missing skills are less than 3
+
     FIT LEVEL RULES:
     - matchScore < 50 → LOW
     - matchScore 50-74 → MODERATE
     - matchScore >= 75 → HIGH
 
     EXPERIENCE RULES:
-    - ONLY use explicit experience from the resume
-    - ONLY consider professional experience for candidateYears (Internships and Jobs only)
-    - DO NOT assume years from skills or projects
-    - Internships count as experience
-    - If experience duration is unclear:
-      - candidateYears = 0
-    - If required experience is not mentioned:
-      - requiredYears = null
+    - NO COMMENTS in JSON
+    - NO EXPLANATIONS
+    - candidateExperience = must be calculated ONLY from explicitly mentioned professional experience entries in the resume
 
-    ROLE RULES:
-    - Roles must match candidate skills and projects
-    - Never suggest Senior roles under 3 years experience
-    - Never suggest Lead or Architect roles under 5 years experience
-    - Maximum 3 matched roles
+    - Count ONLY:
+      - Full-time jobs
+      - Part-time jobs
+      - Internships
+      - Contract roles
+      - Apprenticeships
+
+    - Do NOT count:
+      - Personal projects
+      - Academic projects
+      - Freelance work unless explicitly marked as professional experience
+      - Open-source contributions
+      - Hackathons
+      - Bootcamps
+      - Skill usage assumptions
+      - Experience inferred from summaries, skills, or project descriptions
+
+    - Experience duration MUST be calculated strictly from actual dates mentioned in the resume
+
+    - Date calculation rules:
+      - Month + Year to Month + Year
+      - Month + Year to Present
+      - Year-only dates are invalid and must be ignored
+      - If either start date or end date is missing, ignore that experience entry
+
+    - Present date calculation:
+      - Use CURRENT MONTH & YEAR provided in the prompt
+      - Treat 'Present', 'Current', or 'Ongoing' as current date
+
+    - Calculation method:
+      - Convert total experience into months first
+      - Sum all valid professional experience months
+      - Convert final total into decimal years
+      - Formula:
+        candidateExperience = totalMonths / 12
+
+    - Decimal rules:
+      - Keep precise decimal values
+      - Do NOT round aggressively
+      - Maximum 2 decimal places allowed
+      - Examples:
+        - 6 months = 0.5
+        - 1 year 3 months = 1.25
+        - 1 year 6 months = 1.5
+        - 2 years 2 months = 2.17
+
+    - Overlapping experience entries:
+      - Do NOT double count overlapping months
+
+    - If no valid professional experience exists:
+      - candidateExperience = 0
+
+    - requiredYears rules:
+      - Extract ONLY if explicitly mentioned in job description
+      - If not explicitly mentioned:
+        - requiredYears = null
+
+    - meetsRequirement rules:
+      - If requiredYears is null:
+        - meetsRequirement = false
+      - Else:
+        - meetsRequirement = candidateExperience >= requiredYears
+
+    ROLEFIT RULES:
+    - alignmentScore = must be a number, score must be between 0 and 100, if the target role doesn't match the candidate's skills and experience, alignmentScore must be very low
+    - TargetRole = must match the job title provided by the user
+    - matchedRoles:
+      - Must be an array of role titles
+      - Roles must align with the candidate's skills, projects, and professional experience
+      - Roles should be generic, not very specific (like Full Stack Developer, Software Engineer, etc)
+      - Upto 5 roles, try to generate atleast 3 related roles
 
     SCORING RULES:
     - matchScore and breakdown values must be integers between 0 and 100
@@ -347,6 +418,20 @@ export class ResumeAnalysisService {
 
     RESUME:
     ${rawText.slice(0, 5000)}
+
+    INSTRUCTIONS: Provide feedback that's professional, specific, and helpful for improvement.
+    NO comments, NO explanation, NO extra text, ONLY return the JSON object
+
+    CRITICAL JSON RULES:
+      - Numbers must be plain numbers only
+      - Never generate formulas or calculations
+      - Never generate comments
+      - Never generate expressions like 12 / 4
+      - Never   use markdown
+      - Never use backticks
+      - Never use // comments
+      - Never use /* comments */
+      - NO COMMENTS in JSON (FOR EXAMPLE: DON'T PUT comments as "// this is comments" INSIDE JSON)
     `;
 
     const analysis =
