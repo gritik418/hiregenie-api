@@ -6,7 +6,7 @@ import MatchResumeInputDto from './dto/matchResume.dto';
 import ResumeAnalysisResponseSchema from './schemas/resumeAnalysisResponse.schema';
 import ResumeAnalysisOutputDto from './dto/resumeAnalysisOutput.dto';
 import MatchResumeResponseSchema from './schemas/matchResumeResponse.schema';
-import MatchResumeAnalysisOutputDto from './dto/matchResumeAnalysisOutput.dto';
+import { MatchResumeChain } from '../ai-engine/chains/match-resume.chain';
 
 @Injectable()
 export class ResumeAnalysisService {
@@ -14,6 +14,7 @@ export class ResumeAnalysisService {
     private readonly prismaService: PrismaService,
     private readonly pdfParserService: PdfParserService,
     private readonly aiEngineService: AiEngineService,
+    private readonly matchResumeChain: MatchResumeChain,
   ) {}
 
   async analyzeResume(resumeId: string) {
@@ -224,221 +225,171 @@ export class ResumeAnalysisService {
       });
     }
 
-    const prompt = `
-    You are an expert technical recruiter.
+    //     const prompt = `
+    // You are an expert technical recruiter with 10+ years experience matching candidates to tech roles.
 
-    Analyze the candidate resume against the target job role.
+    // ## MANDATORY OUTPUT RULES (CRITICAL - VIOLATION = FAILURE)
+    // - Return ONLY valid JSON - NO EXCEPTIONS
+    // - NO markdown, NO explanations, NO comments, NO extra text, NO escape characters
+    // - All fields REQUIRED - use exact data types
+    // - Numbers: use plain integers/decimals (0-100 range where specified), NEVER null for matchScore/alignmentScore
+    // - Strings: "" if no value
+    // - Arrays: [] if empty
+    // - Schema structure CANNOT be changed
+    // - NO BACKTICKS OR CODE BLOCKS
 
-    Return ONLY valid JSON.
+    // ## JSON SCHEMA (EXACT STRUCTURE REQUIRED)
+    // {
+    //   "matchScore": number (0-100 integer),
+    //   "fitLevel": string ("LOW" | "MODERATE" | "HIGH"),
+    //   "skills": {
+    //     "matched": string[],
+    //     "missing": string[],
+    //     "partial": string[]
+    //   },
+    //   "experience": {
+    //     "requiredYears": number | null,
+    //     "candidateExperience": number (decimal years, max 2 decimals),
+    //     "meetsRequirement": boolean,
+    //     "notes": string
+    //   },
+    //   "roleFit": {
+    //     "targetRole": string,
+    //     "matchedRoles": string[],
+    //     "alignmentScore": number (0-100 integer)
+    //   },
+    //   "gaps": string[],
+    //   "suggestions": string[],
+    //   "learningPath": string[],
+    //   "summary": string,
+    //   "reason": string,
+    //   "feedback": {
+    //     "summary": string,
+    //     "highlights": string[]
+    //   }
+    // }
 
-    STRICT RULES:
-    - No markdown
-    - No explanations
-    - NO COMMENTS
-    - No extra text
-    - Output must be valid JSON
-    - All fields are required
-    - Do NOT change schema structure
-    - Do NOT return invalid JSON
-    - Use proper data types exactly as defined
-    - Numerical fields can't be null or undefined, return 0, if no value for Numerical fields
-    - No value for string fields, return ""
+    // ## FIELD-BY-FIELD INSTRUCTIONS
 
-    JSON SCHEMA (MUST FOLLOW, NO COMMENTS IN JSON):
-    {
-      "matchScore": type number, // CAN'T BE NULL
-      "fitLevel": type string (LOW | MODERATE | HIGH),
-      "skills": {
-        "matched": type string[], 
-        "missing": type string[],
-        "partial": type string[]
-      },
-      "experience": {
-        "requiredYears": type number | null,
-        "candidateExperience": type number,
-        "meetsRequirement": type boolean,
-        "notes": type string
-      },
-      "roleFit": {
-        "targetRole": type string,
-        "matchedRoles": type string[],
-        "alignmentScore": type number // CAN'T BE NULL
-      },
-      "gaps": type string[],
-      "suggestions": type string[],
-      "learningPath": type string[],
-      "summary": type string,
-      "reason": type string,
-      "feedback": {
-        "summary": type string,
-        "highlights": type string[]
-      }
-    }
+    // ### 1. matchScore (number 0-100, REQUIRED, INTEGER)
+    // - Overall fit score based on: skills(40%) + experience(30%) + projects(20%) + education(10%)
+    // - 0-49 = LOW fit
+    // - 50-74 = MODERATE fit
+    // - 75-100 = HIGH fit
+    // - Base score on EXPLICIT evidence only
+    // - Must NOT BE NULL, MUST BE AN INTEGER
 
-    MATCH SCORE RULES:
-    - Must provide a score
-    - 0-49 = LOW
-    - 50-74 = MODERATE
-    - 75-100 = HIGH
+    // ### 2. fitLevel (string, REQUIRED)
+    // - "LOW" if matchScore < 50
+    // - "MODERATE" if matchScore 50-74
+    // - "HIGH" if matchScore >= 75
 
-    SKILLS RULES:
-    - matched:
-      - Skills present in the resume that match the job requirements
-    - missing:
-      - Skills that should be there according to the job but are not found in the resume
-      - Must try to add atleast 2-3 missing skills
-    - partial:
-      - Skills weakly matched, indirectly related, briefly mentioned, or lacking practical/project evidence
-      - Must try to add atleast 2-3 partial skills only if missing skills are less than 3
+    // ### 3. skills OBJECT (ALL ARRAYS REQUIRED)
+    // **matched** (string[]): Skills that user has that are relevant to the job
+    // **missing** (string[]): Skills that can be relevant to the job but ABSENT from resume (ALWAYS 2-3 minimum), if no missing skills can be found then return empty array []
+    // **partial** (string[]): Skills weakly mentioned, no projects, or theoretical only (2-3 if missing), if no partial skills can be found then return empty array []
 
-    FIT LEVEL RULES:
-    - matchScore < 50 → LOW
-    - matchScore 50-74 → MODERATE
-    - matchScore >= 75 → HIGH
+    // ### 4. experience OBJECT (ALL FIELDS REQUIRED)
+    // **requiredYears** (number|null):
+    // - Extract EXACT number if mentioned in job desc ("3+ years", "5 years exp")
+    // - null if NOT explicitly stated
 
-    EXPERIENCE RULES:
-    - NO COMMENTS in JSON
-    - NO EXPLANATIONS
-    - candidateExperience = must be calculated ONLY from explicitly mentioned professional experience entries in the resume
+    // **candidateExperience** (number, decimal years):
+    // CALCULATE ONLY FROM EXPLICIT PROFESSIONAL EXPERIENCE WITH COMPLETE DATES:
 
-    - Count ONLY:
-      - Full-time jobs
-      - Part-time jobs
-      - Internships
-      - Contract roles
-      - Apprenticeships
+    // ## ✅ VALID (Month+Year → Month+Year/Present)
+    // "Frontend Developer Intern | July 2025 - Present"
+    // → July 2025 to ${new Date().getMonth() + 1}/${new Date().getFullYear()} = 4 months = 0.33
 
-    - Do NOT count:
-      - Personal projects
-      - Academic projects
-      - Freelance work unless explicitly marked as professional experience
-      - Open-source contributions
-      - Hackathons
-      - Bootcamps
-      - Skill usage assumptions
-      - Experience inferred from summaries, skills, or project descriptions
+    // ## ❌ IGNORE COMPLETELY (ZERO VALUE)
+    // Projects | Freelance (undated) | "Developed features..." (no dates) |
+    // Open source | Bootcamps | Hackathons | Year-only ("2023") |
+    // Missing start/end | Academic/personal | Summary claims
 
-    - Experience duration MUST be calculated strictly from actual dates mentioned in the resume
+    // ## EXACT CALCULATION (NO ASSUMPTIONS)
+    // 1. VALID ONLY: "Month Year - Month Year" OR "Month Year - Present"
+    // 2. Present = ${new Date().getMonth() + 1}/${new Date().getFullYear()}
+    // 3. Months = (EndYear×12 + EndMonth) - (StartYear×12 + StartMonth)
+    // 4. Years = Months ÷ 12 (2 decimals: 0.33, 1.25, 2.17)
+    // 5. NO overlap | NO rounding | NO estimates
+    // 6. ZERO entries = 0.00
 
-    - Date calculation rules:
-      - Month + Year to Month + Year
-      - Month + Year to Present
-      - Year-only dates are invalid and must be ignored
-      - If either start date or end date is missing, ignore that experience entry
+    // **Date Rules:**
+    // - Month+Year to Month+Year → calculate months
+    // - "Present" = ${new Date().getMonth() + 1}/${new Date().getFullYear()}
+    // - Total months / 12 = decimal years (max 2 decimals)
+    // - 0 if no valid dated experience
 
-    - Present date calculation:
-      - Use CURRENT MONTH & YEAR provided in the prompt
-      - Treat 'Present', 'Current', or 'Ongoing' as current date
+    // **meetsRequirement** (boolean):
+    // - true if requiredYears = null OR candidateExperience >= requiredYears
 
-    - Calculation method:
-      - Convert total experience into months first
-      - Sum all valid professional experience months
-      - Convert final total into decimal years
-      - Formula:
-        candidateExperience = totalMonths / 12
+    // **notes** (string): "X years in relevant roles" or "No dated professional experience"
 
-    - Decimal rules:
-      - Keep precise decimal values
-      - Do NOT round aggressively
-      - Maximum 2 decimal places allowed
-      - Examples:
-        - 6 months = 0.5
-        - 1 year 3 months = 1.25
-        - 1 year 6 months = 1.5
-        - 2 years 2 months = 2.17
+    // ### 5. roleFit OBJECT
+    // **targetRole** (string): "${data.jobTitle ?? 'Unknown Role'}"
 
-    - Overlapping experience entries:
-      - Do NOT double count overlapping months
+    // **matchedRoles** (string[]): 3-5 generic roles candidate qualifies for
+    // - Examples: "Frontend Developer", "Full Stack Engineer", "React Developer"
+    // - Base on resume experience + skills
 
-    - If no valid professional experience exists:
-      - candidateExperience = 0
+    // **alignmentScore** (number 0-100): How well candidate's background matches targetRole
 
-    - requiredYears rules:
-      - Extract ONLY if explicitly mentioned in job description
-      - If not explicitly mentioned:
-        - requiredYears = null
+    // ### 6. gaps (string[]): 3-5 specific missing elements
+    // - "No cloud platform experience"
+    // - "Missing containerization skills"
+    // - "Limited production deployment experience"
 
-    - meetsRequirement rules:
-      - If requiredYears is null:
-        - meetsRequirement = false
-      - Else:
-        - meetsRequirement = candidateExperience >= requiredYears
+    // ### 7. suggestions (string[]): 3-5 ACTIONABLE recommendations
+    // - "Build REST API with Node.js + Express"
+    // - "Complete AWS Certified Developer course"
+    // - "Deploy project to Vercel/Netlify"
 
-    ROLEFIT RULES:
-    - alignmentScore = must be a number, score must be between 0 and 100, if the target role doesn't match the candidate's skills and experience, alignmentScore must be very low
-    - TargetRole = must match the job title provided by the user
-    - matchedRoles:
-      - Must be an array of role titles
-      - Roles must align with the candidate's skills, projects, and professional experience
-      - Roles should be generic, not very specific (like Full Stack Developer, Software Engineer, etc)
-      - Upto 5 roles, try to generate atleast 3 related roles
+    // ### 8. learningPath (string[]): 3-5 step-by-step learning steps
+    // - "1. FreeCodeCamp React course"
+    // - "2. Build todo app with Redux"
+    // - "3. Deploy to Netlify"
 
-    SCORING RULES:
-    - matchScore and breakdown values must be integers between 0 and 100
-    - skills = technical skill relevance
-    - experience = experience relevance
-    - projects = project quality and relevance
-    - education = education relevance
+    // ### 9. summary (string): 2-3 sentences, 100 words max
+    // Professional overview of fit
 
-    GAPS RULES:
-    - Include important missing skills or experience gaps
-    - Keep concise and realistic
+    // ### 10. reason (string): HTML formatted (400 words max)
+    // - Candidate-facing explanation
+    // - Use ' for styling (no ")
+    // - Professional, constructive tone
 
-    SUGGESTIONS RULES:
-    - Must be actionable
-    - Mention technologies, projects, certifications, or learning directions
-    - Avoid generic advice
+    // ### 11. feedback OBJECT
+    // **summary** (string): 1-2 sentence recruiter evaluation
+    // **highlights** (string[]): 3-4 bullet points of strengths/weaknesses
 
-    SUMMARY RULES:
-    - 2 to 3 lines summary
-    - NO HTML
+    // ## CONTEXT
+    // **Target Role**: ${data.jobTitle ?? 'Unknown'}
+    // **Job Description**: ${data.jobDescription ?? 'Not provided'}
+    // **Required Experience**: ${data.experienceRequired ?? 'Not provided'}
+    // **Current Date**: ${new Date().getMonth() + 1}/${new Date().getFullYear()}
+    // **Resume**: ${rawText.slice(0, 5000)}
 
-    FEEDBACK RULES:
-    - feedback.summary is required, string format, NO HTML
-    - feedback.highlights must contain 2-4 concise points, NO HTML
-    - Feedback should sound like real recruiter evaluation
+    // ## FINAL CHECKLIST (Strictly followed)
+    // - ✅ Must be a proper JSON
+    // - ✅ All fields present
+    // - ✅ Correct data types
+    // - ✅ Numbers 0-100 integers where required
+    // - ✅ Experience calculated precisely
+    // - ✅ 2-3 missing skills minimum
+    // - ✅ Actionable suggestions
+    // - ✅ No escaped characters in JSON
+    // - ✅ ALL field names MUST be double quoted
+    // `;
 
-    REASON RULES:
-    - Must be good enough to be shown to the candidate
-    - IN HTML format
-    - Upto 400 words (excluding html tags, use ' for styling)
-    - MUST BE PROPERLY ENCLOSED IN "", DONT USE " Inside
-
-    TARGET ROLE:
-    ${data.jobTitle ?? 'Unknown'}
-
-    JOB DESCRIPTION:
-    ${data.jobDescription ?? 'Not provided'}
-
-    REQUIRED EXPERIENCE:
-    ${data.experienceRequired ?? 'Not provided'}
-
-    CURRENT MONTH & YEAR: (FOR CANDIDATE'S EXPERIENCE CALCULATION):
-    ${new Date().getMonth()}, ${new Date().getFullYear()}
-
-    RESUME:
-    ${rawText.slice(0, 5000)}
-
-    INSTRUCTIONS: Provide feedback that's professional, specific, and helpful for improvement.
-    NO comments, NO explanation, NO extra text, ONLY return the JSON object
-
-    CRITICAL JSON RULES:
-      - Numbers must be plain numbers only
-      - Never generate formulas or calculations
-      - Never generate comments
-      - Never generate expressions like 12 / 4
-      - Never   use markdown
-      - Never use backticks
-      - Never use // comments
-      - Never use /* comments */
-      - NO COMMENTS in JSON (FOR EXAMPLE: DON'T PUT comments as "// this is comments" INSIDE JSON)
-    `;
-
-    const analysis =
-      await this.aiEngineService.generateResponseInJSON<MatchResumeAnalysisOutputDto>(
-        prompt,
-        MatchResumeResponseSchema,
-      );
+    // const analysis =
+    //   await this.aiEngineService.generateResponseInJSON<MatchResumeAnalysisOutputDto>(
+    //     prompt,
+    //     MatchResumeResponseSchema,
+    //   );
+    const analysis = await this.matchResumeChain.matchResume(
+      data,
+      rawText,
+      MatchResumeResponseSchema,
+    );
 
     if (!analysis) {
       // await this.prismaService.create({
