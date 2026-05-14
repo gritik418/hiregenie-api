@@ -68,6 +68,8 @@ model ResumeAnalysis {
   reason        String
   feedback      Json?
 
+  aiSummary     String?
+
   user          User        @relation(fields: [userId], references: [id])
   resume        Resume      @relation(fields: [resumeId], references: [id])
 
