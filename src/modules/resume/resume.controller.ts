@@ -8,6 +8,7 @@ import {
   HttpCode,
   HttpStatus,
   Get,
+  Param,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ResumeService } from './resume.service';
@@ -30,5 +31,11 @@ export class ResumeController {
   @HttpCode(HttpStatus.OK)
   getResumes(@Req() req: Request) {
     return this.resumeService.getResumes(req);
+  }
+
+  @Get(':resumeId')
+  @HttpCode(HttpStatus.OK)
+  getResume(@Param('resumeId') resumeId: string, @Req() req: Request) {
+    return this.resumeService.getResume(resumeId, req);
   }
 }
