@@ -1,13 +1,18 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from 'src/database/prisma/prisma.service';
-import { PdfParserService } from '../resume/parsers/pdf-parser.service';
 import { AiEngineService } from '../ai-engine/ai-engine.service';
-import MatchResumeInputDto from './dto/matchResume.dto';
-import ResumeAnalysisResponseSchema from './schemas/resumeAnalysisResponse.schema';
-import ResumeAnalysisOutputDto from './dto/resumeAnalysisOutput.dto';
-import MatchResumeResponseSchema from './schemas/matchResumeResponse.schema';
-import { MatchResumeChain } from '../ai-engine/chains/match-resume.chain';
 import { AnalyzeResumeChain } from '../ai-engine/chains/analyze-resume.chain';
+import { MatchResumeChain } from '../ai-engine/chains/match-resume.chain';
+import { PdfParserService } from '../resume/parsers/pdf-parser.service';
+import MatchResumeInputDto from './dto/matchResume.dto';
+import ResumeAnalysisOutputDto from './dto/resumeAnalysisOutput.dto';
+import AiResumeSummaryResponseSchema from './schemas/aiResumeSummaryResponse.schema';
+import MatchResumeResponseSchema from './schemas/matchResumeResponse.schema';
+import ResumeAnalysisResponseSchema from './schemas/resumeAnalysisResponse.schema';
 
 @Injectable()
 export class ResumeAnalysisService {
@@ -25,7 +30,7 @@ export class ResumeAnalysisService {
         id: resumeId,
       },
     });
-    if (!resume || !resume.fileUrl)
+    if (!resume || !resume.userId || !resume.fileUrl || !resume.id)
       throw new BadRequestException('Resume not found.');
 
     const existingAnalysis = await this.prismaService.resumeAnalysis.findFirst({
@@ -56,6 +61,8 @@ export class ResumeAnalysisService {
         },
       });
     }
+
+    return await this.getAiResumeSummary(resume.id);
 
     // const prompt = `
     // You are an expert technical recruiter.
@@ -198,8 +205,8 @@ export class ResumeAnalysisService {
     if (!data) {
       await this.prismaService.resumeAnalysis.create({
         data: {
-          resumeId: resume.id,
-          userId: resume.userId,
+          resumeId: resume?.id || '',
+          userId: resume?.userId || '',
           status: 'FAILED',
           summary: 'Failed to analyze resume',
           reason: 'Failed to analyze resume',
@@ -210,8 +217,8 @@ export class ResumeAnalysisService {
 
     const analysis = await this.prismaService.resumeAnalysis.create({
       data: {
-        resumeId: resume.id,
-        userId: resume.userId,
+        resumeId: resume?.id || '',
+        userId: resume?.userId || '',
         status: 'COMPLETED',
         ...data,
       },
@@ -424,5 +431,105 @@ export class ResumeAnalysisService {
     }
 
     return { success: true, message: 'Resume matched successfully', analysis };
+  }
+
+  async getAiResumeSummary(resumeId: string) {
+    const resume = await this.prismaService.resume.findUnique({
+      where: {
+        id: resumeId,
+      },
+      select: {
+        rawText: true,
+      },
+    });
+
+    if (!resume) throw new NotFoundException('Resume not found.');
+
+    if (!resume.rawText) throw new BadRequestException('Raw text not found.');
+
+    const prompt = `You are a resume data extraction tool.
+
+Current date: ${new Date().getMonth() + 1}/${new Date().getFullYear()}
+
+## EXTRACTION RULES
+
+### validRoles Extraction:
+- ONLY extract from sections: "PROFESSIONAL EXPERIENCE", "WORK EXPERIENCE", "EMPLOYMENT", "JOB HISTORY"
+- Required fields per role: Job Title, Company Name, Start Date, End Date
+- Date format must be "MM/YYYY" or "Month YYYY"
+- "Present" or "Current" in end date = "Present"
+- SKIP: Projects, hackathons, coursework, personal projects, volunteer work without pay
+- INCLUDE: Internships, apprenticeships, part-time jobs, contract work
+
+### Duration Calculation:
+- Total months = (endYear - startYear) * 12 + (endMonth - startMonth)
+- If endDate is "Present", use current month: ${new Date().getMonth() + 1}/${new Date().getFullYear()}
+- Round to nearest whole number
+
+### projects Extraction:
+- ONLY from sections: "PROJECTS", "KEY PROJECTS", "TECHNICAL PROJECTS"
+- Extract: name, description (1-2 lines), tech stack (array), URL/link if present
+- Each project must have a name and at least description OR technologies
+
+### summary Requirements:
+- Minimum 5 sentences
+- Include: Name (if found), education, key skills, relevant projects, total experience
+- Write in third person or neutral tone
+
+### Date Parsing Logic:
+Parse into "MM/YYYY":
+- "Jan 2020" → "01/2020"
+- "2020" assumes "01/2020"
+- "5/2020" pads to "05/2020"
+- Handle "Feb 2019 - Present", "2019 - Present", etc.
+
+## OUTPUT STRUCTURE
+
+{
+  "experienceAnalysis": {
+    "validRoles": [
+      {
+        "title": "string",
+        "company": "string",
+        "startDate": "MM/YYYY",
+        "endDate": "MM/YYYY or Present",
+        "durationMonths": number,
+        "experienceSummary": "1-2 sentences from bullet points"
+      }
+    ],
+    "totalExperienceMonths": number,
+    "experienceLevel": "Entry-level" | "Mid-level" | "Senior-level" | "Not Applicable"
+  },
+  "projects": [
+    {
+      "name": "string",
+      "description": "string",
+      "technologies": ["string"],
+      "link": "string or null"
+    }
+  ],
+  "summary": "comprehensive paragraph (min 5 sentences)"
+}
+
+## CRITICAL RULES
+1. Output ONLY valid JSON - no text before/after
+2. NO markdown/code fences
+3. Do NOT fabricate data - extract only what exists
+4. Use double quotes, escape properly
+5. Include ALL required fields
+6. Calculate duration accurately
+
+RAW RESUME:
+"""
+${resume.rawText}
+"""
+`;
+
+    const output = await this.aiEngineService.generateResponseInJSON(
+      prompt,
+      AiResumeSummaryResponseSchema,
+    );
+
+    return { output };
   }
 }

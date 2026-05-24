@@ -17,12 +17,18 @@ import MatchResumeSchema from './schemas/matchResume.schema';
 @UseGuards(AuthGuard)
 @Controller('resume-analysis')
 export class ResumeAnalysisController {
-  constructor(private readonly resumeAnalysisService: ResumeAnalysisService) {}
+  constructor(private readonly resumeAnalysisService: ResumeAnalysisService) { }
 
   @Post(':resumeId')
   @HttpCode(HttpStatus.OK)
   analyzeResume(@Param('resumeId') resumeId: string) {
     return this.resumeAnalysisService.analyzeResume(resumeId);
+  }
+
+  @Post(':resumeId/summary')
+  @HttpCode(HttpStatus.OK)
+  resumeSummary(@Param('resumeId') resumeId: string) {
+    return this.resumeAnalysisService.getAiResumeSummary(resumeId);
   }
 
   @Post(':resumeId/match')

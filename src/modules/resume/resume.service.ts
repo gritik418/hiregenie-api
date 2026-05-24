@@ -77,4 +77,6 @@ export class ResumeService {
 
     return { success: true, message: 'Resumes fetched successfully.', resumes };
   }
+
+  async;
 }
