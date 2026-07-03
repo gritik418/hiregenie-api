@@ -76,7 +76,7 @@ Never estimate.
 Example notes:
 "Calculated from one internship (6 months) and one full-time position (1.5 years), totaling 2.0 years."
 
-Return:
+Expected nested "experience" structure:
 
 {
   "requiredYears": number | null,

@@ -1,11 +1,11 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
+import { ResumeAnalysis, ResumeMatchAnalysis } from 'generated/prisma/browser';
 import { PrismaService } from 'src/database/prisma/prisma.service';
 import { AiEngineService } from '../ai-engine/ai-engine.service';
 import { MatchResumeChain } from '../ai-engine/chains/match-resume.chain';
 import { PdfParserService } from '../resume/parsers/pdf-parser.service';
 import { ResumeService } from '../resume/resume.service';
 import MatchResumeInputDto from './dto/matchResume.dto';
-import MatchResumeResponseSchema from '../ai-engine/schemas/match-resume-response.schema';
 
 @Injectable()
 export class ResumeAnalysisService {
@@ -76,24 +76,59 @@ export class ResumeAnalysisService {
       throw new BadRequestException('Failed to analyze resume');
     }
 
-    const analysis = await this.prismaService.resumeAnalysis.create({
-      data: {
-        resumeId: resume?.id || '',
-        userId: resume?.userId || '',
-        status: 'COMPLETED',
-        ...resumeAnalysis,
-      },
-    });
+    let analysis: ResumeAnalysis | null = null;
+
+    if (existingAnalysis) {
+      analysis = await this.prismaService.resumeAnalysis.update({
+        where: {
+          id: existingAnalysis.id,
+        },
+        data: {
+          ...resumeAnalysis,
+          updatedAt: new Date(),
+        },
+      });
+    } else {
+      analysis = await this.prismaService.resumeAnalysis.create({
+        data: {
+          resumeId: resume?.id || '',
+          userId: resume?.userId || '',
+          status: 'COMPLETED',
+          ...resumeAnalysis,
+        },
+      });
+    }
 
     return { success: true, message: 'Resume analyzed successfully', analysis };
   }
 
-  async matchResume(resumeId: string, data: MatchResumeInputDto) {
+  async matchResume(
+    resumeId: string,
+    data: MatchResumeInputDto,
+    regenerate: boolean,
+  ) {
     const resume = await this.prismaService.resume.findUnique({
       where: {
         id: resumeId,
       },
     });
+
+    const existingMatchAnalysis =
+      await this.prismaService.resumeMatchAnalysis.findFirst({
+        where: {
+          resumeId,
+          targetRole: data.jobTitle,
+          jobDescription: data?.jobDescription || null,
+          status: 'COMPLETED',
+        },
+      });
+
+    if (existingMatchAnalysis && !regenerate)
+      return {
+        success: true,
+        message: 'Resume matched successfully.',
+        analysis: existingMatchAnalysis,
+      };
 
     if (!resume || !resume.fileUrl || !resume?.rawText)
       throw new BadRequestException('Resume not found.');
@@ -132,16 +167,43 @@ export class ResumeAnalysisService {
       throw new BadRequestException('Failed to match resume');
     }
 
-    const analysis = await this.prismaService.resumeMatchAnalysis.create({
-      data: {
-        resumeId: resume?.id || '',
-        userId: resume?.userId || '',
-        status: 'COMPLETED',
-        ...matchAnalysis,
-      },
-    });
+    let analysis: ResumeMatchAnalysis | null = null;
 
-    return { success: true, message: 'Resume matched successfully', analysis };
+    if (existingMatchAnalysis) {
+      analysis = await this.prismaService.resumeMatchAnalysis.update({
+        where: {
+          id: existingMatchAnalysis.id,
+        },
+        data: {
+          status: 'COMPLETED',
+          ...matchAnalysis,
+          requiredExperience:
+            data.experienceRequired &&
+            !isNaN(parseInt(data.experienceRequired, 10))
+              ? parseInt(data.experienceRequired, 10)
+              : null,
+          updatedAt: new Date(),
+        },
+      });
+    } else {
+      analysis = await this.prismaService.resumeMatchAnalysis.create({
+        data: {
+          resumeId: resume?.id || '',
+          userId: resume?.userId || '',
+          status: 'COMPLETED',
+          targetRole: data.jobTitle,
+          jobDescription: data.jobDescription || null,
+          requiredExperience:
+            data.experienceRequired &&
+            !isNaN(parseInt(data.experienceRequired, 10))
+              ? parseInt(data.experienceRequired, 10)
+              : null,
+          ...matchAnalysis,
+        },
+      });
+    }
+
+    return { success: true, message: 'Resume matched successfully.', analysis };
   }
 
   //   async getAiResumeSummary(resumeId: string) {

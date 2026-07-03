@@ -36,8 +36,11 @@ export class ResumeAnalysisController {
   @UsePipes(new ZodValidationPipe(MatchResumeSchema))
   matchResume(
     @Param('resumeId') resumeId: string,
-    @Body() data: MatchResumeInputDto,
+    @Query('regenerate', new ParseBoolPipe({ optional: true }))
+    regenerate: boolean = false,
+    @Body()
+    data: MatchResumeInputDto,
   ) {
-    return this.resumeAnalysisService.matchResume(resumeId, data);
+    return this.resumeAnalysisService.matchResume(resumeId, data, regenerate);
   }
 }

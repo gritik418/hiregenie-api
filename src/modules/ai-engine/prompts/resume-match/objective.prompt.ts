@@ -1,9 +1,9 @@
 export const OBJECTIVE_PROMPT = `
-Your objective is to determine how well the candidate matches the job.
+Your objective is to determine how well the candidate matches the target job title and job description.
 
 Evaluate:
 
-- overall compatibility
+- overall compatibility with the job title
 - required skills
 - experience
 - responsibilities

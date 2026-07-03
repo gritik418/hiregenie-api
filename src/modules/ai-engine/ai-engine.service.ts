@@ -27,6 +27,7 @@ export class AiEngineService {
       baseUrl: this.configService.getOrThrow<string>('OLLAMA_BASE_URL'),
       temperature: 0.7,
       format: 'json',
+      numCtx: 16384,
     });
   }
 
@@ -65,7 +66,6 @@ export class AiEngineService {
 
     const response = await this.model.invoke(messages);
 
-    console.log('response', response);
     const jsonResponse = JSON.parse(response.text);
 
     const result = ResumeAnalysisResponseSchema.safeParse(jsonResponse);
@@ -110,7 +110,6 @@ ${requiredExperience || 'Not Provided'}
 
     const response = await this.model.invoke(messages);
 
-    console.log('response', response);
     const jsonResponse = JSON.parse(response.text);
 
     const result = MatchResumeResponseSchema.safeParse(jsonResponse);

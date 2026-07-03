@@ -11,6 +11,8 @@ export class AnalyzeResumeChain {
   private llm = new ChatOllama({
     model: process.env.OLLAMA_MODEL as string,
     baseUrl: process.env.OLLAMA_BASE_URL as string,
+    format: 'json',
+    numCtx: 16384,
   });
 
   async analyzeResume<T>(resume: string, schema: ZodSchema) {
