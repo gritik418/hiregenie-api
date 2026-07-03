@@ -162,7 +162,7 @@ model PracticeQuestion {
 
   sessionId       String
 
-  category        QuestionCategory
+  category        String
   difficulty      Difficulty
 
   question        String
@@ -176,21 +176,6 @@ model PracticeQuestion {
   createdAt       DateTime @default(now())
 
   session PracticeSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
-}
-
-enum QuestionCategory {
-  TECHNICAL
-  BEHAVIORAL
-  EXPERIENCE
-  SITUATIONAL
-  ROLE_SPECIFIC
-  PROBLEM_SOLVING
-  CASE_STUDY
-  DOMAIN_KNOWLEDGE
-  LEADERSHIP
-  COMMUNICATION
-  CULTURE_FIT
-  GENERAL
 }
 
 enum Difficulty {

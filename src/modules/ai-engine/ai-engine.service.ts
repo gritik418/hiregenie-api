@@ -5,14 +5,17 @@ import { BaseMessage, HumanMessage, SystemMessage } from 'langchain';
 import { ZodSchema } from 'zod';
 import { PromptBuilder } from './builders/prompt.builder';
 import AISummaryResponseDto from './dto/ai-summary-response.dto';
-import { AI_SUMMARY_PROMPTS } from './prompts/ai-summary';
-import { AISummaryResponseSchema } from './schemas/ai-summary-response.schema';
-import ResumeAnalysisResponseDto from './dto/resume-analysis-response.dto';
-import { RESUME_ANALYSIS_PROMPTS } from './prompts/resume-analysis';
-import ResumeAnalysisResponseSchema from './schemas/resume-analysis-response.schema';
 import MatchResumeResponseDto from './dto/match-resume-response.dto';
+import PracticeSessionResponseDto from './dto/practice-session-response.dto';
+import ResumeAnalysisResponseDto from './dto/resume-analysis-response.dto';
+import { AI_SUMMARY_PROMPTS } from './prompts/ai-summary';
+import { PRACTICE_SESSION_PROMPTS } from './prompts/practice-session';
+import { RESUME_ANALYSIS_PROMPTS } from './prompts/resume-analysis';
 import { RESUME_MATCH_PROMPTS } from './prompts/resume-match';
+import { AISummaryResponseSchema } from './schemas/ai-summary-response.schema';
 import MatchResumeResponseSchema from './schemas/match-resume-response.schema';
+import PracticeSessionResponseSchema from './schemas/practice-session-response.schema';
+import ResumeAnalysisResponseSchema from './schemas/resume-analysis-response.schema';
 
 @Injectable()
 export class AiEngineService {
@@ -118,6 +121,55 @@ ${requiredExperience || 'Not Provided'}
       throw new BadRequestException('Failed to parse AI response');
     }
 
+    return result.data;
+  }
+
+  async generatePracticeSession(
+    targetRole: string,
+    difficulty: string,
+    rawText: string,
+    questionCount: number = 5,
+  ): Promise<PracticeSessionResponseDto> {
+    const messages: BaseMessage[] = [];
+
+    messages.push(
+      new SystemMessage(this.promptBuilder.build(...PRACTICE_SESSION_PROMPTS)),
+    );
+    messages.push(
+      new HumanMessage(`
+Target Role:
+${targetRole}
+
+Difficulty Level:
+${difficulty}
+
+Question Count:
+${questionCount}
+
+Resume:
+${rawText}
+`),
+    );
+
+    const response = await this.model.invoke(messages);
+
+    const jsonResponse = JSON.parse(response.text);
+
+    const result = PracticeSessionResponseSchema.safeParse(jsonResponse);
+
+    if (!result.success) {
+      throw new BadRequestException('Failed to parse AI response');
+    }
+    const totalSeconds = result.data?.questions.reduce(
+      (sum, question) => sum + question.estimatedAnswerTimeSeconds + 30,
+      0,
+    );
+    const estimatedDurationMinutes = Math.ceil(totalSeconds / 60);
+
+    result.data.overview.estimatedDurationMinutes = Math.max(
+      1,
+      estimatedDurationMinutes,
+    );
     return result.data;
   }
 
