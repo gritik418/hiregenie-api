@@ -143,7 +143,7 @@ model PracticeSession {
   id          String   @id @default(cuid())
 
   userId      String
-  resumeId    String?
+  resumeId    String
 
   status PracticeSessionStatus @default(ACTIVE)
 
@@ -175,6 +175,11 @@ model PracticeQuestion {
   keyPoints       String[]
 
   hints           String[]
+  evaluationCriteria String[]
+
+  estimatedAnswerTimeSeconds Int?
+
+  tags String[]
 
   createdAt       DateTime @default(now())
 
