@@ -1,11 +1,10 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import axios from 'axios';
-import { PrismaService } from 'src/database/prisma/prisma.service';
 import { PDFParse } from 'pdf-parse';
 
 @Injectable()
 export class PdfParserService {
-  constructor(private readonly prismaService: PrismaService) {}
+  constructor() {}
 
   async parseFromURL(fileUrl: string) {
     if (!fileUrl) throw new BadRequestException('File not found.');

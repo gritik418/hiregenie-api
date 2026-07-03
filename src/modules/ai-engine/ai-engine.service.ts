@@ -1,13 +1,50 @@
 import { ChatOllama } from '@langchain/ollama';
 import { BadRequestException, Injectable } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import { BaseMessage, HumanMessage, SystemMessage } from 'langchain';
 import { ZodSchema } from 'zod';
+import { PromptBuilder } from './builders/prompt.builder';
+import AISummaryResponseDto from './dto/ai-summary-response.dto';
+import { AI_SUMMARY_PROMPTS } from './prompts/ai-summary';
+import { AISummaryResponseSchema } from './schemas/ai-summary-response.schema';
 
 @Injectable()
 export class AiEngineService {
-  private model = new ChatOllama({
-    model: process.env.OLLAMA_MODEL as string,
-    baseUrl: process.env.OLLAMA_BASE_URL as string,
-  });
+  private readonly model: ChatOllama;
+
+  constructor(
+    private readonly promptBuilder: PromptBuilder,
+    private readonly configService: ConfigService,
+  ) {
+    this.model = new ChatOllama({
+      model: this.configService.getOrThrow<string>('OLLAMA_MODEL'),
+      baseUrl: this.configService.getOrThrow<string>('OLLAMA_BASE_URL'),
+      temperature: 0.7,
+      format: 'json',
+    });
+  }
+
+  async generateAiSummary(rawText: string): Promise<AISummaryResponseDto> {
+    const messages: BaseMessage[] = [];
+
+    messages.push(
+      new SystemMessage(this.promptBuilder.build(...AI_SUMMARY_PROMPTS)),
+    );
+
+    messages.push(new HumanMessage(rawText));
+
+    const response = await this.model.invoke(messages);
+
+    const jsonResponse = JSON.parse(response.text);
+
+    const result = AISummaryResponseSchema.safeParse(jsonResponse);
+
+    if (!result.success) {
+      throw new BadRequestException('Failed to parse AI response');
+    }
+
+    return result.data;
+  }
 
   async generateResponseInJSON<T>(
     prompt: string,

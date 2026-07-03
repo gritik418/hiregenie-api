@@ -41,6 +41,7 @@ model Resume {
   fileType String?
 
   rawText    String?
+  aiSummary String?  
 
   user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   analysis   ResumeAnalysis[]
