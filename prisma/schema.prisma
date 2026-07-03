@@ -138,3 +138,71 @@ enum AnalysisStatus {
   COMPLETED
   FAILED
 }
+
+model PracticeSession {
+  id          String   @id @default(cuid())
+
+  userId      String
+  resumeId    String?
+
+  status PracticeSessionStatus @default(IN_PROGRESS)
+
+  targetRole  String
+
+  difficulty  Difficulty
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  questions   PracticeQuestion[]
+}
+
+model PracticeQuestion {
+  id              String   @id @default(cuid())
+
+  sessionId       String
+
+  category        QuestionCategory
+  difficulty      Difficulty
+
+  question        String
+
+  expectedAnswer  String
+
+  keyPoints       String[]
+
+  hints           String[]
+
+  createdAt       DateTime @default(now())
+
+  session PracticeSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+}
+
+enum QuestionCategory {
+  TECHNICAL
+  BEHAVIORAL
+  EXPERIENCE
+  SITUATIONAL
+  ROLE_SPECIFIC
+  PROBLEM_SOLVING
+  CASE_STUDY
+  DOMAIN_KNOWLEDGE
+  LEADERSHIP
+  COMMUNICATION
+  CULTURE_FIT
+  GENERAL
+}
+
+enum Difficulty {
+  BEGINNER
+  EASY
+  MEDIUM
+  HARD
+  EXPERT
+}
+
+enum PracticeSessionStatus {
+  IN_PROGRESS
+  COMPLETED
+  ABANDONED
+}

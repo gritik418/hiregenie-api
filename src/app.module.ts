@@ -11,6 +11,7 @@ import { UserModule } from './modules/user/user.module';
 import { ResumeAnalysisModule } from './modules/resume-analysis/resume-analysis.module';
 import { AiEngineModule } from './modules/ai-engine/ai-engine.module';
 import { AiInterviewModule } from './modules/ai-interview/ai-interview.module';
+import { PracticeModule } from './modules/practice/practice.module';
 
 @Module({
   imports: [
@@ -26,6 +27,7 @@ import { AiInterviewModule } from './modules/ai-interview/ai-interview.module';
     ResumeAnalysisModule,
     AiEngineModule,
     AiInterviewModule,
+    PracticeModule,
   ],
   controllers: [AppController],
   providers: [AppService],
