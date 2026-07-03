@@ -9,10 +9,10 @@ import { AnalyzeResumeChain } from '../ai-engine/chains/analyze-resume.chain';
 import { MatchResumeChain } from '../ai-engine/chains/match-resume.chain';
 import { PdfParserService } from '../resume/parsers/pdf-parser.service';
 import MatchResumeInputDto from './dto/matchResume.dto';
-import ResumeAnalysisOutputDto from './dto/resumeAnalysisOutput.dto';
+import ResumeAnalysisOutputDto from '../ai-engine/dto/resume-analysis-response.dto';
 import AiResumeSummaryResponseSchema from './schemas/aiResumeSummaryResponse.schema';
 import MatchResumeResponseSchema from './schemas/matchResumeResponse.schema';
-import ResumeAnalysisResponseSchema from './schemas/resumeAnalysisResponse.schema';
+import ResumeAnalysisResponseSchema from '../ai-engine/schemas/resume-analysis-response.schema';
 
 @Injectable()
 export class ResumeAnalysisService {
@@ -40,175 +40,38 @@ export class ResumeAnalysisService {
       },
     });
 
-    // if (existingAnalysis) {
-    //   return {
-    //     success: true,
-    //     message: 'Resume already analyzed',
-    //     analysis: existingAnalysis,
-    //   };
-    // }
+    if (existingAnalysis) {
+      return {
+        success: true,
+        message: 'Resume already analyzed',
+        analysis: existingAnalysis,
+      };
+    }
 
     let rawText = resume.rawText || '';
 
-    if (!rawText) {
-      rawText = await this.pdfParserService.parseFromURL(resume.fileUrl);
-      await this.prismaService.resume.update({
-        where: {
-          id: resumeId,
-        },
-        data: {
-          rawText,
-        },
-      });
-    }
-
-    return await this.getAiResumeSummary(resume.id);
-
-    // const prompt = `
-    // You are an expert technical recruiter.
-
-    // Analyze the resume and return ONLY valid JSON.
-
-    // STRICT OUTPUT RULES:
-    // - Your entire response MUST be a single valid JSON object
-    // - Do NOT include any text before or after JSON
-    // - Do NOT include markdown
-    // - Do NOT use \`\`\`
-    // - Do NOT return schema
-    // - Do NOT add explanations
-    // - All fields are REQUIRED
-    // - Use valid JSON (no trailing commas, no comments)
-
-    // FORMAT:
-    // {
-    //   "score": number (0 - 100),
-    //   "breakdown": {
-    //     "keywords": number (0 - 100),
-    //     "experience": number (0 - 100),
-    //     "projects": number (0 - 100),
-    //     "formatting": number (0 - 100)
-    //   },
-    //   "aiSummary": string,
-    //   "recommendedRoles": [
-    //     {
-    //       "title": string,
-    //       "confidence": number (0 - 100)
-    //     }
-    //   ],
-    //   "strengths": string[],
-    //   "weaknesses": string[],
-    //   "gaps": string[],
-    //   "suggestions": string[],
-    //   "keywords": {
-    //     "matched": string[],
-    //     "missing": string[]
-    //   },
-    //   "summary": string,
-    //   "reason": string,
-    //   "feedback": {
-    //     "summary": string,
-    //     "highlights": string[],
-    //     "areasToImprove": string[]
-    //   }
+    // if (!rawText) {
+    //   rawText = await this.pdfParserService.parseFromURL(resume.fileUrl);
+    //   await this.prismaService.resume.update({
+    //     where: {
+    //       id: resumeId,
+    //     },
+    //     data: {
+    //       rawText,
+    //     },
+    //   });
     // }
 
-    // EXPERIENCE DETECTION (VERY IMPORTANT):
-    // - Determine total professional experience from the resume
-    // - Internship/Freelancing/full-time jobs count but indicate entry-level
-    // - If total experience < 1 year → classify as "Intern/Entry Level"
+    const resumeAnalysis = await this.aiEngineService.generateResumeAnalysis(
+      resume?.aiSummary || '',
+    );
 
-    // HARD EXPERIENCE RULES (MANDATORY):
-    // - < 1 year → ONLY Intern or Junior roles allowed
-    // - 1–3 years → Junior or Mid-level roles
-    // - 3+ years → Mid or Senior roles
-    // - NEVER assign Senior roles for less than 3 years experience
-    // - NEVER assign Architect/Lead roles for less than 5 years experience
-    // - These rules OVERRIDE all other signals
-
-    // AI SUMMARY RULES:
-    // - Properly read the user's resume and understand the candidate's experience level, skills, projects, and education.
-    // - Calculate the candidate's total relevant professional experience in decimal years (e.g., 1 year and 6 months = 1.5).
-    // - Do not count personal projects or bootcamps unless explicitly defined as professional experience.
-    // - Only consider relevant experience. Include experience in internship/freelancing/full-time jobs.
-    // - If total experience < 1 year → classify as "Intern/Entry Level".
-    // - If total experience 1-3 years → classify as "Junior/Mid-level".
-    // - If total experience 3+ years → classify as "Mid/Senior".
-    // - Generate a proper summary with all the details and information present in the resume, in a proper structured manner.
-    // - Do not miss any important information from the resume.
-
-    // SCORING RULES:
-    // - All scores must be integers between 0 and 100
-    // - breakdown scores must also be 0–100
-
-    // ROLE RULES:
-    // - Suggest up to 3 relevant roles (1–3 allowed)
-    // - Roles MUST strictly follow experience level
-    // - Roles must match skills in resume
-    // - Do NOT include unrelated roles
-
-    // STRENGTHS:
-    // - Provide meaningful strengths based on resume
-
-    // WEAKNESSES:
-    // - Provide weaknesses only if clearly identifiable
-    // - If resume is strong, keep minimal but realistic
-
-    // GAPS:
-    // - Gaps = missing skills or experience
-    // - If resume is weak → include fundamental gaps
-    // - If resume is strong → include advanced improvements
-    // - If no major gaps → return empty array
-
-    // SUGGESTIONS:
-    // - Provide actionable suggestions (tools, technologies, projects)
-    // - Avoid vague advice
-
-    // KEYWORDS:
-    // - matched = skills present
-    // - missing = important but absent skills
-    // - Can be empty if resume is strong
-
-    // SUMMARY:
-    // - 2–3 lines
-    // - MUST reflect actual experience level (Intern / Junior / Mid)
-    // - NEVER use "Senior", "Expert", or "Architect" for < 3 years experience
-
-    // FEEDBACK RULES (STRICT):
-    // - feedback.summary MUST be 1–2 lines, human-readable evaluation
-    // - feedback.highlights MUST contain 2–4 concise bullet points
-    // - feedback.areasToImprove MUST contain 2–4 actionable points
-
-    // - DO NOT repeat strengths, weaknesses, or suggestions word-for-word
-    // - DO NOT leave any feedback field empty
-    // - Keep feedback concise and clear
-    // - feedback must sound like a real recruiter’s evaluation
-
-    // CRITICAL:
-    // - Output MUST be valid JSON
-    // - If unsure, still return best possible valid JSON
-
-    // RESUME:
-    // ${rawText.slice(0, 5000)}
-    // `;
-
-    // const data =
-    //   await this.aiEngineService.generateResponseInJSON<ResumeAnalysisOutputDto>(
-    //     prompt,
-    //     ResumeAnalysisResponseSchema,
-    //   );
-    const data =
-      await this.analyzeResumeChain.analyzeResume<ResumeAnalysisOutputDto>(
-        rawText,
-        ResumeAnalysisResponseSchema,
-      );
-
-    if (!data) {
+    if (!resumeAnalysis) {
       await this.prismaService.resumeAnalysis.create({
         data: {
           resumeId: resume?.id || '',
           userId: resume?.userId || '',
           status: 'FAILED',
-          summary: 'Failed to analyze resume',
           reason: 'Failed to analyze resume',
         },
       });
@@ -220,7 +83,7 @@ export class ResumeAnalysisService {
         resumeId: resume?.id || '',
         userId: resume?.userId || '',
         status: 'COMPLETED',
-        ...data,
+        ...resumeAnalysis,
       },
     });
 

@@ -7,7 +7,6 @@ const ResumeAnalysisResponseSchema = z.object({
     projects: z.number().min(0).max(100),
     formatting: z.number().min(0).max(100),
   }),
-  aiSummary: z.string(),
   recommendedRoles: z.array(
     z.object({
       title: z.string(),
@@ -23,7 +22,6 @@ const ResumeAnalysisResponseSchema = z.object({
     matched: z.array(z.string()),
     missing: z.array(z.string()),
   }),
-  summary: z.string(),
   reason: z.string(),
   feedback: z.object({
     summary: z.string(),

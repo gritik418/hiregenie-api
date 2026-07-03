@@ -7,6 +7,9 @@ import { PromptBuilder } from './builders/prompt.builder';
 import AISummaryResponseDto from './dto/ai-summary-response.dto';
 import { AI_SUMMARY_PROMPTS } from './prompts/ai-summary';
 import { AISummaryResponseSchema } from './schemas/ai-summary-response.schema';
+import ResumeAnalysisResponseDto from './dto/resume-analysis-response.dto';
+import { RESUME_ANALYSIS_PROMPTS } from './prompts/resume-analysis';
+import ResumeAnalysisResponseSchema from './schemas/resume-analysis-response.schema';
 
 @Injectable()
 export class AiEngineService {
@@ -38,6 +41,31 @@ export class AiEngineService {
     const jsonResponse = JSON.parse(response.text);
 
     const result = AISummaryResponseSchema.safeParse(jsonResponse);
+
+    if (!result.success) {
+      throw new BadRequestException('Failed to parse AI response');
+    }
+
+    return result.data;
+  }
+
+  async generateResumeAnalysis(
+    aiSummary: string,
+  ): Promise<ResumeAnalysisResponseDto> {
+    const messages: BaseMessage[] = [];
+
+    messages.push(
+      new SystemMessage(this.promptBuilder.build(...RESUME_ANALYSIS_PROMPTS)),
+    );
+
+    messages.push(new HumanMessage(aiSummary));
+
+    const response = await this.model.invoke(messages);
+
+    console.log('response', response);
+    const jsonResponse = JSON.parse(response.text);
+
+    const result = ResumeAnalysisResponseSchema.safeParse(jsonResponse);
 
     if (!result.success) {
       throw new BadRequestException('Failed to parse AI response');
