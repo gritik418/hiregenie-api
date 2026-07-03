@@ -97,6 +97,7 @@ export class ResumeService {
         fileUrl: true,
         createdAt: true,
         updatedAt: true,
+        aiSummary: true,
         rawText: true,
       },
       orderBy: {
@@ -125,6 +126,7 @@ export class ResumeService {
         createdAt: true,
         updatedAt: true,
         rawText: true,
+        aiSummary: true,
       },
     });
 
