@@ -313,6 +313,12 @@ RECOMMENDED LEARNING RULES
 - Do not limit recommendations strictly to the job description; use industry-standard expectations for the target role (e.g. recommend Django/FastAPI, microservices, or testing frameworks for a Python Developer if they are missing or weak on the resume).
 
 ----------------------------------------
+REASON RULES
+----------------------------------------
+
+- "reason": A brief explanation of the overall compatibility, fit level, and match score. It MUST explicitly detail the comparison between the candidate's calculated experience years and the required experience years (e.g., candidate has X years of experience, which does/does not meet the required Y years).
+
+----------------------------------------
 FINAL VALIDATION (MANDATORY)
 ----------------------------------------
 

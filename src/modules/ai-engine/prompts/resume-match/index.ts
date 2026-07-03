@@ -8,6 +8,7 @@ import { OUTPUT_PROMPT } from './output.prompt';
 import { RECOMMENDATIONS_PROMPT } from './recommendations.prompt';
 import { SCORING_PROMPT } from './scoring.prompt';
 import { VALIDATION_PROMPT } from './validation.prompt';
+import { FEEDBACK_PROMPT } from './feedback.prompt';
 
 export const RESUME_MATCH_PROMPTS = [
   CURRENT_DATE_PROMPT,
@@ -18,6 +19,7 @@ export const RESUME_MATCH_PROMPTS = [
   SCORING_PROMPT,
   MATCHING_PROMPT,
   RECOMMENDATIONS_PROMPT,
+  FEEDBACK_PROMPT,
   VALIDATION_PROMPT,
   OUTPUT_PROMPT,
 ];
