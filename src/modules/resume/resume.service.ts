@@ -7,9 +7,7 @@ import { Request } from 'express';
 import { PrismaService } from 'src/database/prisma/prisma.service';
 import { CloudinaryService } from 'src/integrations/cloudinary/cloudinary.service';
 import { AiEngineService } from '../ai-engine/ai-engine.service';
-import RawTextNormalizerOutputDto from './dto/rawTextNormalizerOutput.dto';
 import { PdfParserService } from './parsers/pdf-parser.service';
-import RawTextNormalizerResponseSchema from './schemas/rawTextNormalizerResponse.schema';
 
 @Injectable()
 export class ResumeService {
@@ -134,49 +132,6 @@ export class ResumeService {
       throw new NotFoundException('Resume not found.');
     }
 
-    if (!resume.rawText) throw new BadRequestException('Raw Text not found.');
-
-    await this.resumeRawTextNormalizer(resume.rawText);
-
     return { success: true, message: 'Resume fetched successfully.', resume };
-  }
-
-  async resumeRawTextNormalizer(rawText: string) {
-    if (!rawText || rawText.trim().length === 0) {
-      throw new BadRequestException('Raw text not found.');
-    }
-
-    // Handle very short inputs
-    if (rawText.trim().length < 20) {
-      throw new BadRequestException(
-        'Resume text appears too short to be a valid resume.',
-      );
-    }
-
-    const normalizePrompt = `
-    You are a Resume Format Converter.
-
-Convert the raw resume below into a clean, consistently structured format.
-Output MUST be a single valid JSON object starting with { and ending with }.
-The JSON must have exactly ONE key: "normalizedText"
-The value must be a string containing the FULL resume with ALL original information.
-
-Output ONLY the JSON. No markdown, no code blocks, no explanation.
-
-Resume:
-${rawText}`;
-
-    const output =
-      await this.aiEngineService.generateResponseInJSON<RawTextNormalizerOutputDto>(
-        normalizePrompt,
-        RawTextNormalizerResponseSchema,
-      );
-
-    return {
-      success: true,
-      message: 'Resume normalized successfully.',
-      normalizedText: output.normalizedText,
-      rawText,
-    };
   }
 }
