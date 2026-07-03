@@ -4,7 +4,9 @@ import {
   HttpCode,
   HttpStatus,
   Param,
+  ParseBoolPipe,
   Post,
+  Query,
   UseGuards,
   UsePipes,
 } from '@nestjs/common';
@@ -17,12 +19,16 @@ import MatchResumeSchema from './schemas/matchResume.schema';
 @UseGuards(AuthGuard)
 @Controller('resume-analysis')
 export class ResumeAnalysisController {
-  constructor(private readonly resumeAnalysisService: ResumeAnalysisService) { }
+  constructor(private readonly resumeAnalysisService: ResumeAnalysisService) {}
 
   @Post(':resumeId')
   @HttpCode(HttpStatus.OK)
-  analyzeResume(@Param('resumeId') resumeId: string) {
-    return this.resumeAnalysisService.analyzeResume(resumeId);
+  analyzeResume(
+    @Param('resumeId') resumeId: string,
+    @Query('regenerate', new ParseBoolPipe({ optional: true }))
+    regenerate: boolean = false,
+  ) {
+    return this.resumeAnalysisService.analyzeResume(resumeId, regenerate);
   }
 
   @Post(':resumeId/summary')

@@ -24,7 +24,7 @@ export class ResumeAnalysisService {
     private readonly analyzeResumeChain: AnalyzeResumeChain,
   ) {}
 
-  async analyzeResume(resumeId: string) {
+  async analyzeResume(resumeId: string, regenerate: boolean) {
     const resume = await this.prismaService.resume.findUnique({
       where: {
         id: resumeId,
@@ -40,7 +40,7 @@ export class ResumeAnalysisService {
       },
     });
 
-    if (existingAnalysis) {
+    if (existingAnalysis && !regenerate) {
       return {
         success: true,
         message: 'Resume already analyzed',
