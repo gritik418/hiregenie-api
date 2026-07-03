@@ -31,12 +31,6 @@ export class ResumeAnalysisController {
     return this.resumeAnalysisService.analyzeResume(resumeId, regenerate);
   }
 
-  @Post(':resumeId/summary')
-  @HttpCode(HttpStatus.OK)
-  resumeSummary(@Param('resumeId') resumeId: string) {
-    return this.resumeAnalysisService.getAiResumeSummary(resumeId);
-  }
-
   @Post(':resumeId/match')
   @HttpCode(HttpStatus.OK)
   @UsePipes(new ZodValidationPipe(MatchResumeSchema))

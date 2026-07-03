@@ -24,6 +24,7 @@ model User {
 
   resumes   Resume[]
   resumeAnalysis ResumeAnalysis[]
+  resumeMatches ResumeMatchAnalysis[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -45,6 +46,7 @@ model Resume {
 
   user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   analysis   ResumeAnalysis[]
+  resumeMatches ResumeMatchAnalysis[]
 
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
@@ -74,44 +76,61 @@ model ResumeAnalysis {
   createdAt     DateTime    @default(now())
   updatedAt     DateTime    @updatedAt
 }
-
 model ResumeMatchAnalysis {
-  id                 String   @id @default(cuid())
+  id String @id @default(cuid())
 
-  resumeId           String?
-  userId             String?
+  status AnalysisStatus @default(PROCESSING)
 
-  targetRole         String
-  jobDescription     String?
+  userId   String?
+  resumeId String?
+
+  targetRole String?
+  jobDescription String?
   requiredExperience Int?
 
-  matchScore         Int
-  fitLevel           FitLevel
+  matchScore Int?
+  fitLevel FitLevel?
+
+  breakdown Json?
 
   skills Json?
-  experience         Json?
+  keywords Json?
+  responsibilities Json?
+  qualifications Json?
+  certifications Json?
+  experience Json?
   roleFit Json?
 
+  strengths String[]
   gaps String[]
   suggestions String[]
-  learningPath String[]
+  recommendedLearning String[]
 
-  summary String
-  reason String
-  feedback Json
+  priorityActions Json?
 
-  
-  // projects           Json?
-  // education          Json?
+  summary String?
+  reason String?
+  feedback Json?
 
-  createdAt          DateTime @default(now())
-  updatedAt          DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user   User?   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  resume Resume? @relation(fields: [resumeId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([resumeId])
+  @@index([targetRole])
+  @@index([matchScore])
+  @@index([fitLevel])
 }
 
 enum FitLevel {
+  VERY_LOW
   LOW
   MODERATE
   HIGH
+  EXCELLENT
 }
 
 enum AnalysisStatus {

@@ -10,6 +10,9 @@ import { AISummaryResponseSchema } from './schemas/ai-summary-response.schema';
 import ResumeAnalysisResponseDto from './dto/resume-analysis-response.dto';
 import { RESUME_ANALYSIS_PROMPTS } from './prompts/resume-analysis';
 import ResumeAnalysisResponseSchema from './schemas/resume-analysis-response.schema';
+import MatchResumeResponseDto from './dto/match-resume-response.dto';
+import { RESUME_MATCH_PROMPTS } from './prompts/resume-match';
+import MatchResumeResponseSchema from './schemas/match-resume-response.schema';
 
 @Injectable()
 export class AiEngineService {
@@ -66,6 +69,51 @@ export class AiEngineService {
     const jsonResponse = JSON.parse(response.text);
 
     const result = ResumeAnalysisResponseSchema.safeParse(jsonResponse);
+
+    if (!result.success) {
+      throw new BadRequestException('Failed to parse AI response');
+    }
+
+    return result.data;
+  }
+
+  async generateResumeMatchAnalysis(
+    aiSummary: string,
+    jobTitle: string,
+    jobDescription: string,
+    requiredExperience: string,
+  ): Promise<MatchResumeResponseDto> {
+    const messages: BaseMessage[] = [];
+    const currentDate = new Date().toISOString().split('T')[0];
+
+    messages.push(
+      new SystemMessage(this.promptBuilder.build(...RESUME_MATCH_PROMPTS)),
+    );
+    messages.push(
+      new HumanMessage(`
+Current Date:
+${currentDate}
+
+Resume:
+${aiSummary}
+
+Job Title:
+${jobTitle}
+
+Job Description:
+${jobDescription || 'Not Provided'}
+
+Required Experience:
+${requiredExperience || 'Not Provided'}
+`),
+    );
+
+    const response = await this.model.invoke(messages);
+
+    console.log('response', response);
+    const jsonResponse = JSON.parse(response.text);
+
+    const result = MatchResumeResponseSchema.safeParse(jsonResponse);
 
     if (!result.success) {
       throw new BadRequestException('Failed to parse AI response');

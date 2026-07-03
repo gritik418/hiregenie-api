@@ -8,6 +8,6 @@ import { AiEngineModule } from '../ai-engine/ai-engine.module';
   imports: [AiEngineModule],
   controllers: [ResumeController],
   providers: [ResumeService, PdfParserService],
-  exports: [PdfParserService],
+  exports: [PdfParserService, ResumeService],
 })
 export class ResumeModule {}
