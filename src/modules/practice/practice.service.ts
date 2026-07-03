@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Injectable,
   NotFoundException,
   UnauthorizedException,
@@ -43,16 +44,54 @@ export class PracticeService {
       questionCount,
     );
 
-    // const practiceSession = await this.prismaService.practiceSession.create({
-    //   data: {
-    //     difficulty,
-    //     targetRole,
-    //     userId,
-    //     resumeId,
-    //     questions: {},
-    //   },
-    // });
+    if (!session)
+      throw new BadRequestException('Failed to generate practice session.');
 
-    return { session };
+    const practiceSession = await this.prismaService.practiceSession.create({
+      data: {
+        difficulty,
+        status: 'ACTIVE',
+        targetRole,
+        userId,
+        resumeId,
+        questions: {
+          createMany: {
+            data: session.questions.map((q) => ({
+              question: q.question,
+              category: q.category,
+              difficulty: q.difficulty,
+              expectedAnswer: q.expectedAnswer,
+              keyPoints: q.keyPoints,
+              hints: q.hints,
+              evaluationCriteria: q.evaluationCriteria,
+              estimatedAnswerTimeSeconds: q.estimatedAnswerTimeSeconds,
+              tags: q.tags,
+            })),
+          },
+        },
+        overview: session.overview,
+      },
+      select: {
+        id: true,
+        questions: true,
+        difficulty: true,
+        overview: true,
+        resumeId: true,
+        status: true,
+        targetRole: true,
+        userId: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    });
+
+    if (!practiceSession)
+      throw new BadRequestException('Failed to create practice session.');
+
+    return {
+      success: true,
+      message: 'Practice session generated successfully.',
+      session: practiceSession,
+    };
   }
 }

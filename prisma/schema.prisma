@@ -145,17 +145,20 @@ model PracticeSession {
   userId      String
   resumeId    String?
 
-  status PracticeSessionStatus @default(IN_PROGRESS)
+  status PracticeSessionStatus @default(ACTIVE)
 
   targetRole  String
 
   difficulty  Difficulty
+
+  overview Json?
 
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
   questions   PracticeQuestion[]
 }
+
 
 model PracticeQuestion {
   id              String   @id @default(cuid())
@@ -187,7 +190,7 @@ enum Difficulty {
 }
 
 enum PracticeSessionStatus {
-  IN_PROGRESS
+  ACTIVE
   COMPLETED
   ABANDONED
 }
