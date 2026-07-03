@@ -41,7 +41,7 @@ export class ResumeService {
         'Failed to extract text from resume. Please try again or upload a different file.',
       );
 
-    const { summary } = await this.aiEngineService.generateAiSummary(rawText);
+    const summary = await this.getResumeSummary(rawText);
 
     if (!summary)
       throw new BadRequestException(
@@ -133,5 +133,21 @@ export class ResumeService {
     }
 
     return { success: true, message: 'Resume fetched successfully.', resume };
+  }
+
+  async getResumeSummary(rawText: string): Promise<string> {
+    if (!rawText || rawText.trim().length === 0)
+      throw new BadRequestException(
+        'Failed to extract text from resume. Please try again or upload a different file.',
+      );
+
+    const { summary } = await this.aiEngineService.generateAiSummary(rawText);
+
+    if (!summary)
+      throw new BadRequestException(
+        'Failed to generate AI summary. Please try again.',
+      );
+
+    return summary;
   }
 }

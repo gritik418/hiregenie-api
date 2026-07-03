@@ -13,6 +13,7 @@ import ResumeAnalysisOutputDto from '../ai-engine/dto/resume-analysis-response.d
 import AiResumeSummaryResponseSchema from './schemas/aiResumeSummaryResponse.schema';
 import MatchResumeResponseSchema from './schemas/matchResumeResponse.schema';
 import ResumeAnalysisResponseSchema from '../ai-engine/schemas/resume-analysis-response.schema';
+import { ResumeService } from '../resume/resume.service';
 
 @Injectable()
 export class ResumeAnalysisService {
@@ -21,7 +22,7 @@ export class ResumeAnalysisService {
     private readonly pdfParserService: PdfParserService,
     private readonly aiEngineService: AiEngineService,
     private readonly matchResumeChain: MatchResumeChain,
-    private readonly analyzeResumeChain: AnalyzeResumeChain,
+    private readonly resumeService: ResumeService,
   ) {}
 
   async analyzeResume(resumeId: string, regenerate: boolean) {
@@ -30,7 +31,13 @@ export class ResumeAnalysisService {
         id: resumeId,
       },
     });
-    if (!resume || !resume.userId || !resume.fileUrl || !resume.id)
+    if (
+      !resume ||
+      !resume.userId ||
+      !resume.fileUrl ||
+      !resume.id ||
+      !resume.rawText
+    )
       throw new BadRequestException('Resume not found.');
 
     const existingAnalysis = await this.prismaService.resumeAnalysis.findFirst({
@@ -48,23 +55,22 @@ export class ResumeAnalysisService {
       };
     }
 
-    let rawText = resume.rawText || '';
+    let resumeSummary = resume?.aiSummary || '';
 
-    // if (!rawText) {
-    //   rawText = await this.pdfParserService.parseFromURL(resume.fileUrl);
-    //   await this.prismaService.resume.update({
-    //     where: {
-    //       id: resumeId,
-    //     },
-    //     data: {
-    //       rawText,
-    //     },
-    //   });
-    // }
+    if (!resumeSummary) {
+      resumeSummary = await this.resumeService.getResumeSummary(resume.rawText);
+      await this.prismaService.resume.update({
+        where: {
+          id: resumeId,
+        },
+        data: {
+          aiSummary: resumeSummary,
+        },
+      });
+    }
 
-    const resumeAnalysis = await this.aiEngineService.generateResumeAnalysis(
-      resume?.aiSummary || '',
-    );
+    const resumeAnalysis =
+      await this.aiEngineService.generateResumeAnalysis(resumeSummary);
 
     if (!resumeAnalysis) {
       await this.prismaService.resumeAnalysis.create({
