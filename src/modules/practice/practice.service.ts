@@ -125,4 +125,30 @@ export class PracticeService {
       sessions,
     };
   }
+
+  async getPracticeSession(sessionId: string, req: Request) {
+    const userId = req.user?.id;
+
+    if (!userId) throw new UnauthorizedException('Please Login.');
+    if (!sessionId) throw new BadRequestException('Session ID is required.');
+
+    const session = await this.prismaService.practiceSession.findFirst({
+      where: {
+        userId,
+        id: sessionId,
+      },
+      include: {
+        questions: true,
+      },
+    });
+
+    if (!session)
+      throw new NotFoundException('No such Practice Session found.');
+
+    return {
+      success: true,
+      message: 'Practice session fetched successfully.',
+      session,
+    };
+  }
 }

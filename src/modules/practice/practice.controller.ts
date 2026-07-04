@@ -24,6 +24,14 @@ export class PracticeController {
     return this.practiceService.getPracticeSessions(req);
   }
 
+  @Get('sessions/:sessionId')
+  getPracticeSession(
+    @Param('sessionId') sessionId: string,
+    @Req() req: Request,
+  ) {
+    return this.practiceService.getPracticeSession(sessionId, req);
+  }
+
   @Post(':resumeId/generate')
   generatePracticeSession(
     @Param('resumeId') resumeId: string,
