@@ -264,11 +264,7 @@ export class ResumeAnalysisService {
         data: {
           status: 'COMPLETED',
           ...matchAnalysis,
-          requiredExperience:
-            data.experienceRequired &&
-            !isNaN(parseInt(data.experienceRequired, 10))
-              ? parseInt(data.experienceRequired, 10)
-              : null,
+          requiredExperience: data.experienceRequired,
           updatedAt: new Date(),
         },
       });
@@ -280,11 +276,7 @@ export class ResumeAnalysisService {
           status: 'COMPLETED',
           targetRole: data.jobTitle,
           jobDescription: data.jobDescription || null,
-          requiredExperience:
-            data.experienceRequired &&
-            !isNaN(parseInt(data.experienceRequired, 10))
-              ? parseInt(data.experienceRequired, 10)
-              : null,
+          requiredExperience: data.experienceRequired || null,
           ...matchAnalysis,
         },
       });
@@ -310,6 +302,8 @@ export class ResumeAnalysisService {
         resumeId: true,
         status: true,
         targetRole: true,
+        jobDescription: true,
+        requiredExperience: true,
         matchScore: true,
         fitLevel: true,
         createdAt: true,
@@ -352,6 +346,7 @@ export class ResumeAnalysisService {
             fileName: true,
             fileSize: true,
             fileType: true,
+            aiSummary: true,
             createdAt: true,
             updatedAt: true,
           },

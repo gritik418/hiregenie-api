@@ -1,96 +1,32 @@
 export const MATCHING_PROMPT = `
 Compare the resume against the job description.
 
-Only compare information that is explicitly stated.
-
-Do not infer missing information.
-
-Do not assume technologies.
-
-Do not invent certifications (except under "certifications.missing" where you should recommend industry-standard certifications matching the target Job Title if they are missing from the resume).
-
-Do not invent qualifications (except under "qualifications.missing" where you should list standard/preferred qualifications/degrees matching the target Job Title that are not explicitly on the resume, even if the candidate already has a relevant degree).
-
-Do not invent responsibilities (except under "responsibilities.missing" where you should suggest common responsibilities for the target Job Title that the candidate lacks on their resume).
-
-Rules
-
-Matched
-
-Include items clearly present in the resume that match the job description or target Job Title requirements.
-
-Missing
-
-Include items that are:
-- explicitly required by the job description (or are standard expectations for the target Job Title if the job description is brief or missing)
-- absent from the resume
-- You MUST proactively try to identify and suggest at least 1-3 missing items for each missing category (skills, keywords, certifications, qualifications, responsibilities) based on the target Job Title if they are not explicitly present on the resume. Even if a category has partial or matched items (e.g., if the candidate already has a BCA degree, or some skills/keywords), you should still suggest additional standard/preferred items for that category that are absent from the resume. Do not return empty arrays [] for missing categories if there are standard industry requirements/options for the role.
-
-Partial
-
-Include closely related skills, or skills where the candidate has only basic academic knowledge/limited exposure but lacks professional experience.
-- Note: Core frameworks/technologies for specific roles (e.g. Django and FastAPI for a Python Developer or Python-related role) MUST NOT be classified as "partial". They can only be classified as "matched" (if explicitly present on the resume) or "missing" (if absent).
-
-Example
-
-Job:
-NestJS
-
-Resume:
-Express.js
-
-→ Partial
-
-Example
-
-Job:
-AWS
-
-Resume:
-Docker
-
-→ Missing
-
-Never use generic placeholders.
-
-INVALID
-
-[
-"required skills"
-]
-
-[
-"required certifications"
-]
-
-[
-"missing technologies"
-]
-
-VALID
-
-[
-"AWS",
-"Docker Compose",
-"Kubernetes"
-]
-
-If no missing items exist, return an empty array.
-
-Suggest missing keywords based on industry expectations for the target Job Title if they are absent from the resume.
-
 ----------------------------------------
-ROLE FIT & JOB TITLE RULES
+STRICT EVIDENCE-BASED MATCHING RULES
 ----------------------------------------
 
-1. "roleFit.targetRole" represents the "Job Title" provided in the input. If a Job Title is provided, "roleFit.targetRole" MUST match it exactly (e.g. "Python Developer"). It should only be null if no Job Title is provided.
+1. Do NOT assume, infer, or guess candidate information.
+2. Only compare information that is explicitly stated on the resume.
+3. STRICT SKILL & KEYWORD MATCHING:
+   - A skill, technology, tool, or keyword can ONLY be classified as "matched" if it is explicitly written on the candidate's resume.
+   - If a technology (e.g., Kubernetes, Prometheus, Grafana, Terraform, AWS, Jenkins, Nginx, Linux, Ansible) is in the job description or expected for the target Job Title, but is NOT explicitly listed in the resume, it MUST be classified as "missing".
+   - You must never assume the candidate knows a technology because they have a related skill (e.g., do not assume they know AWS because they know Docker, or that they know GitHub Actions because they know Git).
+4. STRICT RESPONSIBILITY MATCHING:
+   - In "responsibilities.matched", only include duties that the candidate has explicitly performed on their resume.
+   - If the job description requires a responsibility (e.g., "Manage Kubernetes clusters in production", "Monitor production systems using Prometheus") and the candidate's resume does not show concrete evidence of performing this duty, it MUST be classified as "missing" under "responsibilities.missing".
+5. QUALIFICATIONS & CERTIFICATIONS:
+   - If the candidate does not have the specific degree or certification requested, it MUST be listed as "missing".
+   - If the candidate has no certifications, "certifications.matched" MUST be an empty array [].
+   - Suggest relevant missing certifications and qualifications based on the target Job Title under "certifications.missing" and "qualifications.missing".
 
-2. "roleFit.matchedRoles" is an array of roles/titles from the candidate's resume or work history that are relevant to or align with the target Job Title.
-   - Analyze the candidate's work history, skills, and projects to identify matching roles.
-   - Provide a list of these roles with a confidence score (0–100) representing how closely their background fits each role.
-   - Do not return an empty array if the candidate has relevant work history.
+----------------------------------------
+ROLE FIT & SENIORITY ALIGNMENT RULES
+----------------------------------------
 
-3. "roleFit.alignmentScore" represents how well the candidate's background matches the target Job Title.
-   - 0: No alignment or completely unrelated background.
-   - 100: Perfect alignment (e.g., candidate has worked in this exact role with all required skills).
+1. "roleFit.targetRole" represents the "Job Title" provided in the input. If a Job Title is provided, "roleFit.targetRole" MUST match it exactly.
+2. "roleFit.matchedRoles" is an array of roles/titles from the candidate's resume or work history that are relevant to or align with the target Job Title. Do not return an empty array if the candidate has work history, but only list actual roles from their history. Each role object must have the structure: { "title": string, "confidence": number }
+3. "roleFit.alignmentScore" represents how well the candidate's background/history/domain aligns with the target Job Title:
+   - If the candidate's background is in a completely different domain (e.g., Frontend developer applying for a DevOps/SRE role, or a HR specialist applying for a Software Engineer role), the alignmentScore MUST be between 0 and 20.
+   - If there is a major seniority mismatch (e.g., an Intern or Junior candidate applying for a Senior, Lead, Manager, or Architect role), the alignmentScore MUST be capped at a maximum of 30.
+   - A perfect 100 alignment score is only for candidates who have worked in the exact same role with matching seniority.
 `;

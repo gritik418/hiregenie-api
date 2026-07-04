@@ -245,7 +245,12 @@ If requiredYears is null:
 If experience cannot be calculated:
 - candidateYears = null
 
-"notes" MUST explain calculation using actual date ranges.
+- "notes" MUST explain calculation using actual date ranges.
+- Experience score (breakdown.experience) and overall matchScore MUST be strictly penalized/capped if candidateYears < requiredYears:
+  * If candidateYears < 0.5 * requiredYears, experience score MUST NOT exceed 30, and overall matchScore MUST be capped at a maximum of 40 (fitLevel = LOW).
+  * If candidateYears < 0.2 * requiredYears (e.g. 0.5 years vs 6 years required), experience score MUST NOT exceed 10, and overall matchScore MUST be capped at a maximum of 25 (fitLevel = VERY_LOW).
+  * If roleFit.alignmentScore < 50, overall matchScore MUST be capped at a maximum of 45 (fitLevel = LOW).
+  * If both, overall matchScore MUST NOT exceed 25 (fitLevel = VERY_LOW).
 
 ----------------------------------------
 RESPONSIBILITIES RULES
@@ -264,7 +269,7 @@ Build APIs, Deploy services, Manage team
 SKILLS RULES
 ----------------------------------------
 
-- "skills.matched": Skills from the resume that match the job description or the target Job Title.
+- "skills.matched": Skills from the resume that match the job description or the target Job Title. A skill can ONLY be in "skills.matched" if it is explicitly written on the candidate's resume.
 - "skills.missing": Skills, frameworks, tools, or methodologies expected or preferred for the target Job Title that the candidate lacks on their resume. Even if the candidate has a highly complete skill set matching the job description, you MUST still identify and suggest at least 1-3 advanced skills, libraries, tools, or methodologies (e.g., Kubernetes, Microservices, System Design, GraphQL, AWS/GCP/Azure cloud services, CI/CD pipelines, unit testing frameworks) relevant to the target Job Title that are absent from their resume. The "skills.missing" array MUST NEVER be empty if there are any standard or advanced industry technologies for the target Job Title that the candidate lacks.
 - "skills.partial": Skills from the resume that are closely related/similar to the requirements (e.g., Express.js if NestJS is required) or where the candidate has only brief exposure/basic academic knowledge but lacks professional experience.
 - Core frameworks/technologies for specific roles (e.g., Django and FastAPI for a Python Developer or Python-related role) MUST NOT be classified as "partial". They can only be classified as "matched" (if explicitly present on the resume) or "missing" (if absent).
@@ -273,7 +278,7 @@ SKILLS RULES
 KEYWORDS RULES
 ----------------------------------------
 
-- "keywords.matched": Important keywords/skills from the resume that match the job description or are relevant to the target "Job Title" (e.g. for a Python Developer, match "Python", "FastAPI", "Django", "PostgreSQL", "REST APIs" if present on the resume).
+- "keywords.matched": Important keywords/skills from the resume that match the job description or are relevant to the target "Job Title". A keyword can ONLY be in "keywords.matched" if it is explicitly written on the candidate's resume.
 - "keywords.missing": Important keywords/skills expected for the target "Job Title" or required by the job description that are missing from the resume. You MUST proactively try to identify and suggest at least 1-3 missing keywords based on the target Job Title if they are absent from the resume. Even if the candidate's resume has many matching keywords, you should still suggest additional standard, preferred, or advanced industry keywords (such as "System Architecture", "Microservices", "Design Patterns", "Scalability", "Agile", or specific tools) that are missing. The "keywords.missing" array MUST NOT be empty if there are any standard, preferred, or advanced industry terms for the target Job Title that the candidate lacks.
 
 ----------------------------------------

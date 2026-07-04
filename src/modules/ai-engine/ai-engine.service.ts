@@ -195,7 +195,7 @@ ${rawText}
     try {
       if (!text) throw new Error('Empty AI response');
 
-      let clean = text
+      const clean = text
         .replace(/```json/g, '')
         .replace(/```/g, '')
         .trim();

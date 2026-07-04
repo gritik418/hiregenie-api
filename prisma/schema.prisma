@@ -88,7 +88,7 @@ model ResumeMatchAnalysis {
 
   targetRole String?
   jobDescription String?
-  requiredExperience Int?
+  requiredExperience String?
 
   matchScore Int?
   fitLevel FitLevel?

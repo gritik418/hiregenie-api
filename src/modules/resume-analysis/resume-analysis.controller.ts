@@ -59,7 +59,7 @@ export class ResumeAnalysisController {
   analyzeResume(
     @Param('resumeId') resumeId: string,
     @Query('regenerate', new ParseBoolPipe({ optional: true }))
-    regenerate: boolean = false,
+    regenerate: boolean = true,
     @Req() req: Request,
   ) {
     return this.resumeAnalysisService.analyzeResume(resumeId, regenerate, req);
@@ -71,7 +71,7 @@ export class ResumeAnalysisController {
   matchResume(
     @Param('resumeId') resumeId: string,
     @Query('regenerate', new ParseBoolPipe({ optional: true }))
-    regenerate: boolean = false,
+    regenerate: boolean = true,
     @Body()
     data: MatchResumeInputDto,
     @Req() req: Request,
