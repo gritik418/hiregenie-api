@@ -66,7 +66,7 @@ export class AuthService {
         name,
         email,
         password: hashedPassword,
-        isEmailVerified: true, // TODO: Remove this
+        isEmailVerified: true,
       },
       select: {
         id: true,
@@ -77,7 +77,7 @@ export class AuthService {
 
     return {
       success: true,
-      message: 'User registered successfully. Check email for verification.',
+      message: 'User registered successfully.',
       user: {
         id: user.id,
         name: user.name,
