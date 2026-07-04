@@ -25,6 +25,7 @@ model User {
   resumes   Resume[]
   resumeAnalysis ResumeAnalysis[]
   resumeMatches ResumeMatchAnalysis[]
+  practiceSessions PracticeSession[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -47,6 +48,7 @@ model Resume {
   user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   analysis   ResumeAnalysis[]
   resumeMatches ResumeMatchAnalysis[]
+  practiceSessions PracticeSession[]
 
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
@@ -157,6 +159,12 @@ model PracticeSession {
   updatedAt   DateTime @updatedAt
 
   questions   PracticeQuestion[]
+
+  resume     Resume    @relation(fields: [resumeId], references: [id], onDelete: Cascade)
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([resumeId])
 }
 
 

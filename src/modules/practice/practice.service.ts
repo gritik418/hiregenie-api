@@ -114,8 +114,26 @@ export class PracticeService {
       where: {
         userId,
       },
-      include: {
-        questions: true,
+      select: {
+        id: true,
+        status: true,
+        difficulty: true,
+        targetRole: true,
+        createdAt: true,
+        updatedAt: true,
+        resumeId: true,
+        overview: true,
+        resume: {
+          select: {
+            fileName: true,
+            fileSize: true,
+            fileType: true,
+            fileUrl: true,
+          },
+        },
+        _count: {
+          select: { questions: true },
+        },
       },
     });
 
