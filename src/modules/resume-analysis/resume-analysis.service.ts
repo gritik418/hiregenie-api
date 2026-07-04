@@ -292,4 +292,45 @@ export class ResumeAnalysisService {
 
     return { success: true, message: 'Resume matched successfully.', analysis };
   }
+
+  async getResumeMatchAnalyses(req: Request) {
+    const userId = req?.user?.id;
+    if (!userId) throw new UnauthorizedException('Please Login.');
+
+    const analyses = await this.prismaService.resumeMatchAnalysis.findMany({
+      where: {
+        userId,
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+      select: {
+        id: true,
+        userId: true,
+        resumeId: true,
+        status: true,
+        targetRole: true,
+        matchScore: true,
+        fitLevel: true,
+        createdAt: true,
+        updatedAt: true,
+        resume: {
+          select: {
+            id: true,
+            fileName: true,
+            fileSize: true,
+            fileType: true,
+            createdAt: true,
+            updatedAt: true,
+          },
+        },
+      },
+    });
+
+    return {
+      success: true,
+      message: 'Resume match analyses fetched successfully',
+      analyses,
+    };
+  }
 }
