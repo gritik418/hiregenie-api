@@ -1,13 +1,14 @@
 import {
   BadRequestException,
   Injectable,
+  NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
 import { PrismaService } from 'src/database/prisma/prisma.service';
 import RegisterInputDto from './dto/register.dto';
 import { HashingService } from 'src/common/hashing/hashing.service';
 import LoginInputDto from './dto/login.dto';
-import { Response } from 'express';
+import { Request, Response } from 'express';
 import { AUTH_COOKIE_NAME } from 'src/common/constants/cookie-names';
 import { cookieOptions } from 'src/common/constants/cookie-options';
 import { JwtService } from '@nestjs/jwt';
@@ -129,6 +130,32 @@ export class AuthService {
         name: user.name,
         email: user.email,
       },
+    };
+  }
+
+  async getMe(req: Request) {
+    const userId = req.user?.id;
+
+    if (!userId)
+      throw new UnauthorizedException('Unauthenticated! Please login again.');
+
+    const user = await this.prismaService.user.findUnique({
+      where: {
+        id: userId,
+      },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+      },
+    });
+
+    if (!user) throw new NotFoundException('User not found');
+
+    return {
+      success: true,
+      message: 'User fetched successfully.',
+      user,
     };
   }
 }
