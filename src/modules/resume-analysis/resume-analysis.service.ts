@@ -111,7 +111,7 @@ export class ResumeAnalysisService {
     return { success: true, message: 'Resume analyzed successfully', analysis };
   }
 
-  async getResumeAnalysis(req: Request) {
+  async getResumeAnalyses(req: Request) {
     const userId = req?.user?.id;
     if (!userId) throw new UnauthorizedException('Please Login.');
 
@@ -122,12 +122,65 @@ export class ResumeAnalysisService {
       orderBy: {
         createdAt: 'desc',
       },
+      select: {
+        id: true,
+        userId: true,
+        resumeId: true,
+        status: true,
+        score: true,
+        createdAt: true,
+        updatedAt: true,
+        resume: {
+          select: {
+            id: true,
+            fileName: true,
+            fileSize: true,
+            fileType: true,
+            createdAt: true,
+            updatedAt: true,
+          },
+        },
+      },
     });
 
     return {
       success: true,
       message: 'Resume analyses fetched successfully',
       analyses,
+    };
+  }
+
+  async getResumeAnalysisById(analysisId: string, req: Request) {
+    const userId = req?.user?.id;
+    if (!userId) throw new UnauthorizedException('Please Login.');
+
+    const analysis = await this.prismaService.resumeAnalysis.findUnique({
+      where: {
+        id: analysisId,
+        userId,
+      },
+      include: {
+        resume: {
+          select: {
+            id: true,
+            fileName: true,
+            fileSize: true,
+            fileType: true,
+            createdAt: true,
+            updatedAt: true,
+            aiSummary: true,
+            fileUrl: true,
+          },
+        },
+      },
+    });
+
+    if (!analysis) throw new BadRequestException('Analysis not found.');
+
+    return {
+      success: true,
+      message: 'Resume analysis fetched successfully.',
+      analysis,
     };
   }
 

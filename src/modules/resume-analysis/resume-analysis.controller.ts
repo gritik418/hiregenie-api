@@ -26,8 +26,17 @@ export class ResumeAnalysisController {
 
   @Get('')
   @HttpCode(HttpStatus.OK)
-  getResumeAnalysis(@Req() req: Request) {
-    return this.resumeAnalysisService.getResumeAnalysis(req);
+  getResumeAnalyses(@Req() req: Request) {
+    return this.resumeAnalysisService.getResumeAnalyses(req);
+  }
+
+  @Get(':analysisId')
+  @HttpCode(HttpStatus.OK)
+  getResumeAnalysisById(
+    @Param('analysisId') analysisId: string,
+    @Req() req: Request,
+  ) {
+    return this.resumeAnalysisService.getResumeAnalysisById(analysisId, req);
   }
 
   @Post(':resumeId')
