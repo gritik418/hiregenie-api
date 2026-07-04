@@ -150,13 +150,41 @@ export class PracticeService {
     if (!userId) throw new UnauthorizedException('Please Login.');
     if (!sessionId) throw new BadRequestException('Session ID is required.');
 
-    const session = await this.prismaService.practiceSession.findFirst({
+    const session = await this.prismaService.practiceSession.findUnique({
       where: {
         userId,
         id: sessionId,
       },
       include: {
-        questions: true,
+        questions: {
+          select: {
+            id: true,
+            question: true,
+            category: true,
+            difficulty: true,
+            keyPoints: true,
+            hints: true,
+            evaluationCriteria: true,
+            estimatedAnswerTimeSeconds: true,
+            tags: true,
+            createdAt: true,
+          },
+        },
+        resume: {
+          select: {
+            id: true,
+            fileName: true,
+            fileType: true,
+            fileSize: true,
+            fileUrl: true,
+            createdAt: true,
+          },
+        },
+        _count: {
+          select: {
+            questions: true,
+          },
+        },
       },
     });
 
