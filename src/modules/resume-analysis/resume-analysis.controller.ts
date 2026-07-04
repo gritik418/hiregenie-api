@@ -36,6 +36,15 @@ export class ResumeAnalysisController {
     return this.resumeAnalysisService.getResumeMatchAnalyses(req);
   }
 
+  @Get(':matchId/match')
+  @HttpCode(HttpStatus.OK)
+  getResumeMatchAnalysis(
+    @Param('matchId') matchId: string,
+    @Req() req: Request,
+  ) {
+    return this.resumeAnalysisService.getResumeMatchAnalysisById(matchId, req);
+  }
+
   @Get(':analysisId')
   @HttpCode(HttpStatus.OK)
   getResumeAnalysisById(

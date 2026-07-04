@@ -333,4 +333,38 @@ export class ResumeAnalysisService {
       analyses,
     };
   }
+
+  async getResumeMatchAnalysisById(matchId: string, req: Request) {
+    const userId = req?.user?.id;
+    if (!userId) throw new UnauthorizedException('Please Login.');
+
+    if (!matchId) throw new BadRequestException('Match id is required.');
+
+    const analysis = await this.prismaService.resumeMatchAnalysis.findUnique({
+      where: {
+        id: matchId,
+        userId,
+      },
+      include: {
+        resume: {
+          select: {
+            id: true,
+            fileName: true,
+            fileSize: true,
+            fileType: true,
+            createdAt: true,
+            updatedAt: true,
+          },
+        },
+      },
+    });
+
+    if (!analysis) throw new BadRequestException('Analysis not found.');
+
+    return {
+      success: true,
+      message: 'Resume match analysis fetched successfully.',
+      analysis,
+    };
+  }
 }
