@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Get,
   HttpCode,
   HttpStatus,
   Param,
@@ -22,6 +23,12 @@ import { Request } from 'express';
 @Controller('resume-analysis')
 export class ResumeAnalysisController {
   constructor(private readonly resumeAnalysisService: ResumeAnalysisService) {}
+
+  @Get('')
+  @HttpCode(HttpStatus.OK)
+  getResumeAnalysis(@Req() req: Request) {
+    return this.resumeAnalysisService.getResumeAnalysis(req);
+  }
 
   @Post(':resumeId')
   @HttpCode(HttpStatus.OK)

@@ -111,6 +111,26 @@ export class ResumeAnalysisService {
     return { success: true, message: 'Resume analyzed successfully', analysis };
   }
 
+  async getResumeAnalysis(req: Request) {
+    const userId = req?.user?.id;
+    if (!userId) throw new UnauthorizedException('Please Login.');
+
+    const analyses = await this.prismaService.resumeAnalysis.findMany({
+      where: {
+        userId,
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+    });
+
+    return {
+      success: true,
+      message: 'Resume analyses fetched successfully',
+      analyses,
+    };
+  }
+
   async matchResume(
     resumeId: string,
     data: MatchResumeInputDto,
