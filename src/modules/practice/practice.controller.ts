@@ -1,4 +1,12 @@
-import { Body, Controller, Param, Post, Req, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Post,
+  Req,
+  UseGuards,
+} from '@nestjs/common';
 import { PracticeService } from './practice.service';
 import { AuthGuard } from 'src/common/guards/auth/auth.guard';
 import { ZodValidationPipe } from 'src/common/pipes/zod-validation/zod-validation.pipe';
@@ -10,6 +18,11 @@ import { Request } from 'express';
 @UseGuards(AuthGuard)
 export class PracticeController {
   constructor(private readonly practiceService: PracticeService) {}
+
+  @Get('sessions')
+  getPracticeSessions(@Req() req: Request) {
+    return this.practiceService.getPracticeSessions(req);
+  }
 
   @Post(':resumeId/generate')
   generatePracticeSession(

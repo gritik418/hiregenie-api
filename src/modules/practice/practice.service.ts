@@ -43,8 +43,8 @@ export class PracticeService {
         targetRole,
         difficulty,
       },
-      omit: {
-        overview: true,
+      include: {
+        questions: true,
       },
     });
 
@@ -90,17 +90,8 @@ export class PracticeService {
         },
         overview: session.overview,
       },
-      select: {
-        id: true,
+      include: {
         questions: true,
-        difficulty: true,
-        overview: true,
-        resumeId: true,
-        status: true,
-        targetRole: true,
-        userId: true,
-        createdAt: true,
-        updatedAt: true,
       },
     });
 
@@ -111,6 +102,27 @@ export class PracticeService {
       success: true,
       message: 'Practice session generated successfully.',
       session: practiceSession,
+    };
+  }
+
+  async getPracticeSessions(req: Request) {
+    const userId = req.user?.id;
+
+    if (!userId) throw new UnauthorizedException('Please Login.');
+
+    const sessions = await this.prismaService.practiceSession.findMany({
+      where: {
+        userId,
+      },
+      include: {
+        questions: true,
+      },
+    });
+
+    return {
+      success: true,
+      message: 'Practice sessions fetched successfully.',
+      sessions,
     };
   }
 }
