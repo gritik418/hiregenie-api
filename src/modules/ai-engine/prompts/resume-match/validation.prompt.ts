@@ -53,9 +53,10 @@ CHECKLIST
 
 ✓ STRICT CHECK: Every single keyword in "keywords.matched" MUST exist in "skills.matched". If a keyword, tool, or technology exists in "skills.missing" or "skills.partial", it is strictly forbidden from "keywords.matched" and MUST be in "keywords.missing".
 
-✓ STRICT CHECK: If a skill/tool/technology (e.g. AWS, Kubernetes, Terraform, Prometheus, Grafana, Jenkins, Nginx, Linux, Ansible, Kafka, Redis, Helm, etc.) is mentioned in the job description or expected for the target Job Title, but NOT explicitly written on the candidate's resume, you MUST put it in "skills.missing" and "keywords.missing". It is STRICTLY FORBIDDEN to list it as matched in "skills.matched" or "keywords.matched".
+✓ STRICT CHECK: If a skill/tool/technology is mentioned in the job description or expected for the target Job Title, but NOT explicitly written on the candidate's resume, you MUST put it in "skills.missing" and "keywords.missing". It is STRICTLY FORBIDDEN to list it as matched in "skills.matched" or "keywords.matched".
 
 ✓ STRICT CHECK: "keywords.missing" and "keywords.matched" MUST only contain short term or tool names (1-3 words). They must NEVER contain long sentences, responsibilities, or duties.
+✓ STRICT CHECK: "keywords.matched" and "keywords.missing" MUST NOT be empty. They must be populated using the short technology/tool names from "skills.matched" and "skills.missing" respectively.
 
 ✓ STRICT CHECK: Validate overall matchScore against the capping rules:
   * If candidateYears < 0.5 * requiredYears, overall matchScore MUST NOT exceed 40.

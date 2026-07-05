@@ -21,9 +21,9 @@ Learn programming.
 
 VALID
 
-Add AWS deployment experience.
+Add deployment experience for ToolA.
 
-Include measurable achievements for your React projects.
+Include measurable achievements for your ProjectA.
 
-Obtain the PMP certification required for this role.
+Obtain the CertificationA required for this role.
 `;

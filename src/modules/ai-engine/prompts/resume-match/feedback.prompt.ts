@@ -10,13 +10,13 @@ Feedback Guidelines:
    - Do NOT leave this empty.
 
 2. feedback.highlights:
-   - Identify 2-5 specific highlights from the candidate's resume (e.g., strong backend skills in Python/Django, experience working on extensions, relevant degree/education, specific projects).
+   - Identify 2-5 specific highlights from the candidate's resume (e.g., strong skills in a relevant area, experience working on key projects, relevant degree/education).
    - Ensure highlights focus on achievements, technologies mastered, or core strengths.
    - Do NOT leave this array empty.
 
 3. feedback.concerns:
-   - Identify 2-5 genuine concerns or potential risk areas regarding the candidate's fit (e.g., short job tenures, lack of AWS/Kubernetes experience, missing specific certifications, lack of experience in system architecture).
-   - If the candidate is a near-perfect match, list constructive areas of improvement (e.g., "Could gain certification X to solidify cloud credentials", "Has limited exposure to production-scale databases").
+   - Identify 2-5 genuine concerns or potential risk areas regarding the candidate's fit (e.g., short job tenures, lack of required experience with key tools, missing specific certifications requested in the job description).
+   - If the candidate is a near-perfect match, list constructive areas of improvement (e.g., "Could gain certification A to solidify credentials", "Has limited exposure to large-scale setups").
    - Do NOT leave this array empty.
 
 Ensure the feedback is specific, objective, and aligns logically with the rest of the match analysis data (such as strengths, gaps, and matchScore).

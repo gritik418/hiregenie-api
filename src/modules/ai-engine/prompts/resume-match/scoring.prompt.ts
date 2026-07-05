@@ -23,17 +23,17 @@ SCORING BREAKDOWN RULES (0-100 each)
 
 3. Responsibilities Score:
    - Compare the candidate's responsibilities on their resume against the required/expected duties of the role.
-   - If the candidate has never performed the primary responsibilities of the role (e.g. they were a Frontend Intern and the role is DevOps Engineer, meaning they never managed production clusters, monitored systems, or built IaC), the responsibilities score MUST be below 20.
+   - If the candidate has never performed the primary responsibilities of the role (e.g., their background is in a completely different functional domain and they lack the core required duties of the target role), the responsibilities score MUST be below 20.
 
 4. Education Score:
-   - 90-100: If the candidate has the exact degree required/preferred (e.g., BS in Computer Science).
-   - 60-80: If the candidate has a related degree (e.g., BCA, IT, Software Engineering minor) but not the exact degree.
+   - 90-100: If the candidate has the exact degree required/preferred (e.g., Degree A).
+   - 60-80: If the candidate has a related degree (e.g., Degree B, Degree C) but not the exact degree.
    - 0-30: If the candidate has an unrelated degree or no degree.
 
 5. Certifications Score:
    - 100: If no certifications are required or preferred in the Job Description, and none are standard/expected for the role.
    - 80-100: If the candidate has the required/preferred certifications.
-   - 0: If the job description or target Job Title specifies or strongly prefers certifications (e.g. AWS Solutions Architect, Kubernetes Certification) and the candidate has NONE of them.
+   - 0: If the job description or target Job Title specifies or strongly prefers certifications (e.g. Certification A, Certification B) and the candidate has NONE of them.
 
 6. Keyword Alignment Score:
    - Calculate as: (Number of Matched Keywords / (Number of Matched Keywords + Number of Missing Keywords)) * 100.
@@ -49,7 +49,7 @@ However, you MUST apply the following CRITICAL CAPS to the overall matchScore (v
 - If candidateYears is less than 50% of the requiredYears (or if there is a severe experience mismatch for senior roles), the overall matchScore MUST be capped at a maximum of 40 (LOW fit).
 - If candidateYears is less than 20% of the requiredYears (e.g., 0.5 years for 6 years required), the overall matchScore MUST be capped at a maximum of 25 (VERY_LOW fit).
 - If the role alignment score is less than 50 (due to different domain or seniority mismatches), the overall matchScore MUST be capped at a maximum of 45 (LOW fit).
-- If there is a complete mismatch in both role/domain and experience (e.g., a junior/intern frontend developer applying for a senior DevOps role), the overall matchScore MUST NOT exceed 25 (VERY_LOW fit) and the fitLevel MUST be "VERY_LOW".
+- If there is a complete mismatch in both role/domain and experience (e.g., a junior/intern candidate applying for a senior role in a completely different functional domain), the overall matchScore MUST NOT exceed 25 (VERY_LOW fit) and the fitLevel MUST be "VERY_LOW".
 - **CRITICAL CAP PRECEDENCE**: If multiple score caps apply to the candidate, the strictly LOWEST/STRICTEST cap MUST be applied. For example, if both the 45 alignment cap and the 25 experience cap apply, you MUST cap the overall matchScore at 25.
 
 ----------------------------------------

@@ -7,7 +7,7 @@ Rules for "keywords":
    - **STRICT FORBIDDEN DIRECTIVE**: Do NOT copy keywords directly from the job description into "keywords.matched" if they are absent from the candidate's resume.
    - **CROSS-FIELD CONSISTENCY**:
      * Every keyword/term in "keywords.matched" MUST also exist in "skills.matched".
-     * If a technology or tool (e.g. AWS, Kubernetes, Terraform, Jenkins, Prometheus, Grafana, Nginx, Ansible, Kafka, Redis, Helm, etc.) is in "skills.missing", it is strictly forbidden from "keywords.matched" and MUST be listed in "keywords.missing".
+      * If a technology or tool is in "skills.missing", it is strictly forbidden from "keywords.matched" and MUST be listed in "keywords.missing".
 
 2. "keywords.missing":
    - List key industry terms, concepts, skills, or tools required or expected for the target Job Title or mentioned in the job description that the candidate lacks on their resume.

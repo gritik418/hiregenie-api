@@ -3,7 +3,7 @@ Evaluate the candidate's educational qualifications, degrees, and academic backg
 
 Rules for "qualifications":
 1. "qualifications.matched":
-   - Include educational qualifications or degrees explicitly present on the candidate's resume (e.g. "Bachelor of Computer Applications (BCA)").
+   - Include educational qualifications or degrees explicitly present on the candidate's resume (e.g. "Degree B").
 2. "qualifications.missing":
    - List standard or preferred qualifications, degrees, or fields of study expected/required by the job description or target Job Title that the candidate lacks on their resume.
    - You MUST identify and suggest at least 4-5 missing or preferred qualification options for the target role. E.g.:

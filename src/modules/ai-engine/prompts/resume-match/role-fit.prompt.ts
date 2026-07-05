@@ -12,5 +12,5 @@ Rules for "roleFit":
 3. "roleFit.alignmentScore":
    - Provide an integer score from 0-100 evaluating how strongly the candidate's background aligns specifically with the target Job Title.
    - Cap alignmentScore at a maximum of 30 if there is a major seniority mismatch (e.g. Intern or Junior candidate applying for a Senior, Lead, Manager, or Architect role).
-   - Set alignmentScore between 0 and 20 if there is a domain/functional mismatch (e.g. Frontend developer applying for DevOps).
+   - Set alignmentScore between 0 and 20 if there is a domain/functional mismatch (e.g. Domain A candidate applying for Domain B).
 `;
