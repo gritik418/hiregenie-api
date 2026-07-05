@@ -31,7 +31,15 @@ Evaluate answers based on:
 
 estimatedAnswerTimeSeconds
 
-Estimate how long a good candidate should need to answer.
+- Estimate how long a good candidate should need to answer the question in seconds.
+- Crucially, calibrate this value based on the total "Estimated Duration" and "Question Count" provided:
+  The sum of (estimatedAnswerTimeSeconds + 30 seconds break) for all questions must equal the total "Estimated Duration" in seconds.
+  For example, if duration is 30 minutes (1800s) and Question Count is 6, then:
+  Total break time = 6 * 30s = 180s.
+  Remaining time for answers = 1800s - 180s = 1620s.
+  Therefore, the average estimatedAnswerTimeSeconds per question should be 1620s / 6 = 270 seconds.
+- You must distribute the answering time appropriately across the questions (e.g., harder questions might get more time, easier ones less), but the total sum of (estimatedAnswerTimeSeconds + 30) for all questions must align with the total "Estimated Duration".
+
 
 tags
 

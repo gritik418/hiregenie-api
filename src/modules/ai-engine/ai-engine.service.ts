@@ -147,6 +147,8 @@ ${requiredExperience || 'Not Provided'}
     difficulty: string,
     rawText: string,
     questionCount: number = 5,
+    estimatedDuration?: string,
+    customInstructions?: string,
   ): Promise<PracticeSessionResponseDto> {
     const messages: BaseMessage[] = [];
 
@@ -163,6 +165,12 @@ ${difficulty}
 
 Question Count:
 ${questionCount}
+
+Estimated Duration:
+${estimatedDuration || 'Not provided'}
+
+Custom Instructions:
+${customInstructions || 'Not provided'}
 
 Resume:
 ${rawText}

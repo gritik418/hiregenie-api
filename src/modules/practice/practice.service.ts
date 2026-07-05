@@ -25,7 +25,13 @@ export class PracticeService {
 
     if (!userId) throw new UnauthorizedException('Please Login.');
 
-    const { difficulty, targetRole, questionCount } = data;
+    const {
+      difficulty,
+      targetRole,
+      questionCount,
+      customInstructions,
+      estimatedDuration,
+    } = data;
 
     const resume = await this.prismaService.resume.findUnique({
       where: {
@@ -37,30 +43,13 @@ export class PracticeService {
     if (!resume || !resume.rawText)
       throw new NotFoundException('No such Resume found.');
 
-    const existingSession = await this.prismaService.practiceSession.findFirst({
-      where: {
-        resumeId,
-        targetRole,
-        difficulty,
-      },
-      include: {
-        questions: true,
-      },
-    });
-
-    if (existingSession) {
-      return {
-        success: true,
-        message: 'Practice session already exists.',
-        session: existingSession,
-      };
-    }
-
     const session = await this.aiEngineService.generatePracticeSession(
       targetRole,
       difficulty,
       resume?.aiSummary || resume.rawText,
       questionCount,
+      estimatedDuration,
+      customInstructions,
     );
 
     if (!session)
