@@ -224,104 +224,15 @@ PRIORITY ACTIONS RULES
   action, name, label
 
 ----------------------------------------
-EXPERIENCE RULES
+SUMMARY & REASON FIELD RULES
 ----------------------------------------
 
-- Calculate candidateYears ONLY from employment dates.
-- NEVER use summary statements like "5 years experience".
-- Include ONLY professional experience.
-- EXCLUDE:
-  - projects
-  - education
-  - coursework
-  - freelance (unless clearly professional employment)
-- Do NOT double count overlapping roles.
-- Use provided Current Date for ongoing roles.
-- Round to 1 decimal place.
-
-If requiredYears is null:
-- meetsRequirement MUST be null
-
-If experience cannot be calculated:
-- candidateYears = null
-
-- "notes" MUST explain calculation using actual date ranges.
-- Experience score (breakdown.experience) and overall matchScore MUST be strictly penalized/capped if candidateYears < requiredYears:
-  * If candidateYears < 0.5 * requiredYears, experience score MUST NOT exceed 30, and overall matchScore MUST be capped at a maximum of 40 (fitLevel = LOW).
-  * If candidateYears < 0.2 * requiredYears (e.g. 0.5 years vs 6 years required), experience score MUST NOT exceed 10, and overall matchScore MUST be capped at a maximum of 25 (fitLevel = VERY_LOW).
-  * If roleFit.alignmentScore < 50, overall matchScore MUST be capped at a maximum of 45 (fitLevel = LOW).
-  * If both, overall matchScore MUST NOT exceed 25 (fitLevel = VERY_LOW).
-
-----------------------------------------
-RESPONSIBILITIES RULES
-----------------------------------------
-
-- Only job duties.
-- NEVER include technologies.
-
-INVALID:
-AWS, React, Docker
-
-VALID:
-Build APIs, Deploy services, Manage team
-
-----------------------------------------
-SKILLS RULES
-----------------------------------------
-
-- "skills.matched": Skills from the resume that match the job description or the target Job Title. A skill can ONLY be in "skills.matched" if it is explicitly written on the candidate's resume.
-- "skills.missing": Skills, frameworks, tools, or methodologies expected or preferred for the target Job Title that the candidate lacks on their resume. Even if the candidate has a highly complete skill set matching the job description, you MUST still identify and suggest at least 1-3 advanced skills, libraries, tools, or methodologies (e.g., Kubernetes, Microservices, System Design, GraphQL, AWS/GCP/Azure cloud services, CI/CD pipelines, unit testing frameworks) relevant to the target Job Title that are absent from their resume. The "skills.missing" array MUST NEVER be empty if there are any standard or advanced industry technologies for the target Job Title that the candidate lacks.
-- "skills.partial": Skills from the resume that are closely related/similar to the requirements (e.g., Express.js if NestJS is required) or where the candidate has only brief exposure/basic academic knowledge but lacks professional experience.
-- Core frameworks/technologies for specific roles (e.g., Django and FastAPI for a Python Developer or Python-related role) MUST NOT be classified as "partial". They can only be classified as "matched" (if explicitly present on the resume) or "missing" (if absent).
-
-----------------------------------------
-KEYWORDS RULES
-----------------------------------------
-
-- "keywords.matched": Important keywords/skills from the resume that match the job description or are relevant to the target "Job Title". A keyword can ONLY be in "keywords.matched" if it is explicitly written on the candidate's resume.
-- "keywords.missing": Important keywords/skills expected for the target "Job Title" or required by the job description that are missing from the resume. You MUST proactively try to identify and suggest at least 1-3 missing keywords based on the target Job Title if they are absent from the resume. Even if the candidate's resume has many matching keywords, you should still suggest additional standard, preferred, or advanced industry keywords (such as "System Architecture", "Microservices", "Design Patterns", "Scalability", "Agile", or specific tools) that are missing. The "keywords.missing" array MUST NOT be empty if there are any standard, preferred, or advanced industry terms for the target Job Title that the candidate lacks.
-
-----------------------------------------
-QUALIFICATIONS RULES
-----------------------------------------
-
-- "qualifications.matched": Educational qualifications, degrees (e.g. Bachelor's, Master's, PhD in relevant fields), or academic milestones explicitly present on the resume that match the job description or target Job Title requirements.
-- "qualifications.missing": Standard/preferred academic qualifications or degrees (e.g., B.Tech/BS in Computer Science, MCA, Master's in IT, or specific professional certifications/diplomas) expected or preferred for the target Job Title that the candidate lacks on their resume. Even if the candidate already has a relevant degree (like BCA), you should still suggest alternative/higher-level preferred qualifications (such as B.Tech/BS in Computer Science or Master of Computer Applications (MCA)) that are missing from their resume. You MUST proactively try to identify and suggest at least 1-3 missing qualifications/degrees based on the target Job Title if they are not explicitly present. The "qualifications.missing" array MUST NOT be empty if there are standard/preferred/higher-level academic or professional qualifications in the industry for the role.
-
-----------------------------------------
-HALLUCINATION RULES
-----------------------------------------
-
-- Compare core candidate profile (skills, experience, responsibilities) strictly against the provided Resume, Job Title, and Job Description.
-- EXCEPTIONS: For "recommendedLearning", "certifications.missing", "qualifications.missing", "skills.missing", and "keywords.missing", you SHOULD use external industry-standard knowledge matching the target "Job Title". If the job description does not mention specific items, suggest standard ones expected or preferred for that role (e.g. PCAP/PCEP for Python Developer, B.Tech/MCA for Software Engineers).
-
-----------------------------------------
-SUGGESTIONS RULES
-----------------------------------------
-
-- Must directly map to a real gap.
-- No generic advice.
-
-INVALID:
-"Improve resume"
-
-VALID:
-"Add AWS deployment experience"
-
-If no gaps → []
-
-----------------------------------------
-RECOMMENDED LEARNING RULES
-----------------------------------------
-
-- Recommend 2-4 concrete skills, technologies, frameworks, or tools that the candidate should learn to align with the target "Job Title".
-- Do not limit recommendations strictly to the job description; use industry-standard expectations for the target role (e.g. recommend Django/FastAPI, microservices, or testing frameworks for a Python Developer if they are missing or weak on the resume).
-
-----------------------------------------
-REASON RULES
-----------------------------------------
-
-- "reason": A brief explanation of the overall compatibility, fit level, and match score. It MUST explicitly detail the comparison between the candidate's calculated experience years and the required experience years (e.g., candidate has X years of experience, which does/does not meet the required Y years).
+- "summary": MUST be a concise 2-3 sentence professional overview of the candidate's match suitability. Do NOT leave this empty.
+- "reason": MUST be a detailed, candidate-facing explanation of the compatibility, fit level, and final matchScore. It MUST explicitly state the experience year comparison (e.g. candidate has X years out of Y years required). Do NOT leave this empty.
+- "strengths": MUST be a list of 2-4 candidate strengths supported by real evidence on their resume.
+- "gaps": MUST be a list of 2-4 real candidate gaps relative to the job requirements.
+- "suggestions": MUST be a list of 2-4 actionable, specific suggestions to help the candidate bridge the identified gaps. No generic advice.
+- "recommendedLearning": MUST be a list of 2-4 concrete technical skills, subjects, or frameworks for the candidate to study, representing industry expectations for the target job title.
 
 ----------------------------------------
 FINAL VALIDATION (MANDATORY)
@@ -336,7 +247,8 @@ Before returning response verify:
 ✓ priorityActions are objects
 ✓ experience is calculated from dates
 ✓ responsibilities contain NO technologies
-✓ no hallucinated skills or certifications
+✓ no hallucinated skills, certifications, or keywords in matched lists
+✓ feedback has summary, highlights, and concerns populated
 ✓ all arrays exist (never null)
 ✓ schema matches exactly
 

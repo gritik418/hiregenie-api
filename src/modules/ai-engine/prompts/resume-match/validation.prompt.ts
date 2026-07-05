@@ -47,6 +47,27 @@ CHECKLIST
 
 ✓ No inferred skills exist (except under "recommendedLearning", "skills.missing", and "keywords.missing" where you should suggest skills/keywords matching the target Job Title).
 
+✓ STRICT CHECK: The "skills.matched" array MUST ONLY contain skills/tools that are explicitly written inside the "Resume:" text block. You MUST NOT copy skills directly from the job description if they are absent on the resume. Every matched skill must be case-insensitively found in the resume.
+
+✓ STRICT CHECK: The "keywords.matched" array MUST ONLY contain keywords that are explicitly written inside the "Resume:" text block. You MUST NOT copy keywords directly from the job description if they are absent on the resume. Every matched keyword must be case-insensitively found in the resume.
+
+✓ STRICT CHECK: Every single keyword in "keywords.matched" MUST exist in "skills.matched". If a keyword, tool, or technology exists in "skills.missing" or "skills.partial", it is strictly forbidden from "keywords.matched" and MUST be in "keywords.missing".
+
+✓ STRICT CHECK: If a skill/tool/technology (e.g. AWS, Kubernetes, Terraform, Prometheus, Grafana, Jenkins, Nginx, Linux, Ansible, Kafka, Redis, Helm, etc.) is mentioned in the job description or expected for the target Job Title, but NOT explicitly written on the candidate's resume, you MUST put it in "skills.missing" and "keywords.missing". It is STRICTLY FORBIDDEN to list it as matched in "skills.matched" or "keywords.matched".
+
+✓ STRICT CHECK: "keywords.missing" and "keywords.matched" MUST only contain short term or tool names (1-3 words). They must NEVER contain long sentences, responsibilities, or duties.
+
+✓ STRICT CHECK: Validate overall matchScore against the capping rules:
+  * If candidateYears < 0.5 * requiredYears, overall matchScore MUST NOT exceed 40.
+  * If candidateYears < 0.2 * requiredYears, overall matchScore MUST NOT exceed 25.
+  * If roleFit.alignmentScore < 50, overall matchScore MUST NOT exceed 45.
+  * If both alignment and experience mismatches exist, overall matchScore MUST NOT exceed 25.
+  * IMPORTANT: If multiple caps apply, the lowest/strictest cap takes absolute precedence.
+
+✓ STRICT CHECK: The "reason" field MUST NOT be empty. It MUST contain a detailed candidate-facing explanation of the compatibility, fit level, and match score, and explicitly describe the experience comparison (candidateYears vs requiredYears).
+
+✓ STRICT CHECK: The "feedback" object MUST contain non-empty values for ALL nested fields: "summary" (string), "highlights" (array of strings), and "concerns" (array of strings). Do NOT leave any of these fields empty or omit them.
+
 If any required field is missing, regenerate the entire response before returning it.
 
 Never return placeholder values.

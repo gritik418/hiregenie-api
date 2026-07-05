@@ -50,6 +50,7 @@ However, you MUST apply the following CRITICAL CAPS to the overall matchScore (v
 - If candidateYears is less than 20% of the requiredYears (e.g., 0.5 years for 6 years required), the overall matchScore MUST be capped at a maximum of 25 (VERY_LOW fit).
 - If the role alignment score is less than 50 (due to different domain or seniority mismatches), the overall matchScore MUST be capped at a maximum of 45 (LOW fit).
 - If there is a complete mismatch in both role/domain and experience (e.g., a junior/intern frontend developer applying for a senior DevOps role), the overall matchScore MUST NOT exceed 25 (VERY_LOW fit) and the fitLevel MUST be "VERY_LOW".
+- **CRITICAL CAP PRECEDENCE**: If multiple score caps apply to the candidate, the strictly LOWEST/STRICTEST cap MUST be applied. For example, if both the 45 alignment cap and the 25 experience cap apply, you MUST cap the overall matchScore at 25.
 
 ----------------------------------------
 FIT LEVEL MAPPING

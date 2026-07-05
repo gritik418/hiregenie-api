@@ -77,17 +77,18 @@ export class MatchResumeChain {
    Use EXACTLY one of these values: "LOW" (score < 50), "MODERATE" (score 50-74), or "HIGH" (score >= 75).
 
 ### 3. skills.matched (string array): 
-   List 3-8 skills from the job description that are explicitly proven in the candidate's resume.
-   E.g., if the JD requires Python and the resume says "Built API with Python", include "Python".
-   Try to list atleast 3-5 skills. If no skills are matched, return empty array.
+   ONLY list skills, tools, frameworks, or languages from the job description that are EXPLICITLY and case-insensitively written inside the candidate's resume text.
+   CRITICAL: If a skill/tool/technology is in the job description but is NOT explicitly written on the candidate's resume, you MUST NOT list it in skills.matched. It MUST be placed in skills.missing (or skills.partial if there is weak/inferred context).
+   Do NOT assume, infer, or guess. If it is not listed on the resume, it is NOT matched.
+   Try to list at least 3-5 skills. If no skills are matched, return empty array.
 
 ### 4. skills.missing (string array): 
-   List 2-5 highly relevant skills required by the job description that are completely absent from the resume.
-   Try to list atleast 2-3 skills. If no skills are missing, return empty array.
+   List highly relevant skills, tools, or technologies required by the job description or expected for the target role that are completely absent from the resume text.
+   Try to list at least 2-3 skills. If no skills are missing, return empty array.
 
 ### 5. skills.partial (string array): 
-   List 2-3 skills that are only weakly mentioned, theoretical, or inferred without concrete evidence.
-   Try to list atleast 1-2 skills. If no skills are partial, return empty array.
+   List skills where the candidate has only brief exposure, theoretical knowledge, or closely related/alternative skills on their resume, but lacks professional production experience.
+   Try to list at least 1-2 skills. If no skills are partial, return empty array.
 
 ### 6. experience.requiredYears (number or null): 
    Extract the exact minimum years of experience required from the job description (e.g., "3+ years" -> 3). Return null if not specified.

@@ -7,14 +7,22 @@ STRICT EVIDENCE-BASED MATCHING RULES
 
 1. Do NOT assume, infer, or guess candidate information.
 2. Only compare information that is explicitly stated on the resume.
-3. STRICT SKILL & KEYWORD MATCHING:
-   - A skill, technology, tool, or keyword can ONLY be classified as "matched" if it is explicitly written on the candidate's resume.
-   - If a technology (e.g., Kubernetes, Prometheus, Grafana, Terraform, AWS, Jenkins, Nginx, Linux, Ansible) is in the job description or expected for the target Job Title, but is NOT explicitly listed in the resume, it MUST be classified as "missing".
-   - You must never assume the candidate knows a technology because they have a related skill (e.g., do not assume they know AWS because they know Docker, or that they know GitHub Actions because they know Git).
-4. STRICT RESPONSIBILITY MATCHING:
+3. The Job Description and Job Title do NOT contain any information about the candidate's history or skills. They only list what the employer requires. You must NEVER treat requirements, skills, or responsibilities listed in the Job Description as if the candidate possesses or has performed them.
+4. STRICT DEFINITION OF "MATCHED":
+   - A skill, technology, tool, or keyword is ONLY classified as "matched" (i.e. in "skills.matched" or "keywords.matched") if:
+     1. It is explicitly and case-insensitively written in the candidate's resume text, AND
+     2. It is required, expected, or mentioned in the job description or target Job Title.
+   - Matching is STRICTLY the intersection of what is explicitly on the resume and what the job requires. If a requirement is in the job description but not in the resume, it is NOT MATCHED—it is MISSING.
+4. STRICT SKILL & KEYWORD MATCHING RULES:
+   - If a technology/tool (e.g., Kubernetes, Prometheus, Grafana, Terraform, AWS, AWS EC2, AWS ECS, AWS EKS, AWS Lambda, AWS IAM, AWS VPC, AWS RDS, AWS S3, Jenkins, Nginx, Linux, Ansible, Kafka, Redis, Helm, etc.) is in the job description or expected for the target Job Title, but is NOT explicitly written in the candidate's resume, it is STRICTLY FORBIDDEN to classify it as matched. It MUST be classified as "missing".
+   - You must never assume the candidate knows a technology because they have a related skill. E.g.:
+     * Do NOT assume they know AWS because they know Docker or Next.js.
+     * Do NOT assume they know GitHub Actions because they know Git or GitHub.
+     * Do NOT assume they have DevOps or SRE experience because they have Frontend or Backend web development experience.
+5. STRICT RESPONSIBILITY MATCHING:
    - In "responsibilities.matched", only include duties that the candidate has explicitly performed on their resume.
    - If the job description requires a responsibility (e.g., "Manage Kubernetes clusters in production", "Monitor production systems using Prometheus") and the candidate's resume does not show concrete evidence of performing this duty, it MUST be classified as "missing" under "responsibilities.missing".
-5. QUALIFICATIONS & CERTIFICATIONS:
+6. QUALIFICATIONS & CERTIFICATIONS:
    - If the candidate does not have the specific degree or certification requested, it MUST be listed as "missing".
    - If the candidate has no certifications, "certifications.matched" MUST be an empty array [].
    - Suggest relevant missing certifications and qualifications based on the target Job Title under "certifications.missing" and "qualifications.missing".

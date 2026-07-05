@@ -20,6 +20,7 @@ import ResumeAnalysisResponseSchema from './schemas/resume-analysis-response.sch
 @Injectable()
 export class AiEngineService {
   private readonly model: ChatOllama;
+  private readonly strictModel: ChatOllama;
 
   constructor(
     private readonly promptBuilder: PromptBuilder,
@@ -29,6 +30,13 @@ export class AiEngineService {
       model: this.configService.getOrThrow<string>('OLLAMA_MODEL'),
       baseUrl: this.configService.getOrThrow<string>('OLLAMA_BASE_URL'),
       temperature: 0.7,
+      format: 'json',
+      numCtx: 16384,
+    });
+    this.strictModel = new ChatOllama({
+      model: this.configService.getOrThrow<string>('OLLAMA_MODEL'),
+      baseUrl: this.configService.getOrThrow<string>('OLLAMA_BASE_URL'),
+      temperature: 0.0,
       format: 'json',
       numCtx: 16384,
     });
@@ -67,7 +75,7 @@ export class AiEngineService {
 
     messages.push(new HumanMessage(aiSummary));
 
-    const response = await this.model.invoke(messages);
+    const response = await this.strictModel.invoke(messages);
 
     const jsonResponse = JSON.parse(response.text);
 
@@ -94,6 +102,16 @@ export class AiEngineService {
     );
     messages.push(
       new HumanMessage(`
+Below is the input data for the resume match analysis. Use this info as defined below:
+1. "Current Date": Reference date to accurately calculate the candidate's work durations/tenures.
+2. "Resume": The candidate's resume/summary content. This is the sole source of truth for their actual history, skills, education, and certifications.
+3. "Job Title": Target role title, used to assess general domain/seniority alignment and role suitability.
+4. "Job Description": Duties and expectations, used to match candidate's skills, keywords, and responsibilities.
+5. "Required Experience": Minimum years of experience expected, used to calculate score alignment and determine overall fit level/caps.
+
+*CRITICAL WARNING*: The "Job Title", "Job Description", and "Required Experience" fields represent the EMPLOYER'S job posting requirements and expectations. They contain absolutely ZERO information about the candidate. You must NEVER copy skills, keywords, or responsibilities from these sections as if they belong to the candidate unless they are explicitly present inside the "Resume" text block.
+
+### INPUT DATA VALUES:
 Current Date:
 ${currentDate}
 
@@ -111,7 +129,7 @@ ${requiredExperience || 'Not Provided'}
 `),
     );
 
-    const response = await this.model.invoke(messages);
+    const response = await this.strictModel.invoke(messages);
 
     const jsonResponse = JSON.parse(response.text);
 
