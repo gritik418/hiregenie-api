@@ -6,7 +6,7 @@ Return a JSON object matching this schema exactly.
     "summary": string,
     "focusAreas": [string],
     "estimatedDurationMinutes": number,
-    "instructions": [string]
+    "instructions": string[] (MUST generate at least 5 clear, actionable candidate guidelines/instructions for the session)
   },
 
   "questions": [

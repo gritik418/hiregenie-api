@@ -27,4 +27,8 @@ Handling Answering Times:
 
 Handling Custom Instructions:
 - If "Custom Instructions" are provided, you MUST strictly follow them to tailor the interview's focus, technical domain, question topics, or specific evaluation criteria.
+
+Handling Practice Session Overview:
+- The "overview.focusAreas" array should list 2-4 key technical or behavioral focus areas evaluated in this session.
+- The "overview.instructions" array MUST contain at least 5 clear, actionable candidate instructions or guidelines for taking this session (e.g., advising the candidate on explaining their thought process out loud, using the STAR method for behavioral questions, what depth of answers is expected, etc.). You must NEVER return an empty array [] for "overview.instructions".
 `;
