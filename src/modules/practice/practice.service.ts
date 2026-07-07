@@ -79,7 +79,20 @@ export class PracticeService {
         },
       },
       include: {
-        questions: true,
+        questions: {
+          select: {
+            id: true,
+            question: true,
+            category: true,
+            difficulty: true,
+            keyPoints: true,
+            hints: true,
+            evaluationCriteria: true,
+            estimatedAnswerTimeSeconds: true,
+            tags: true,
+            createdAt: true,
+          },
+        },
       },
     });
 
@@ -123,6 +136,9 @@ export class PracticeService {
         _count: {
           select: { questions: true },
         },
+      },
+      orderBy: {
+        createdAt: 'desc',
       },
     });
 
