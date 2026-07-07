@@ -147,7 +147,6 @@ ${requiredExperience || 'Not Provided'}
     difficulty: string,
     rawText: string,
     questionCount: number = 5,
-    estimatedDuration?: string,
     customInstructions?: string,
   ): Promise<PracticeSessionResponseDto> {
     const messages: BaseMessage[] = [];
@@ -166,9 +165,6 @@ ${difficulty}
 Question Count:
 ${questionCount}
 
-Estimated Duration:
-${estimatedDuration || 'Not provided'}
-
 Custom Instructions:
 ${customInstructions || 'Not provided'}
 
@@ -184,8 +180,14 @@ ${rawText}
     const result = PracticeSessionResponseSchema.safeParse(jsonResponse);
 
     if (!result.success) {
+      console.error(
+        'Zod parsing failed:',
+        JSON.stringify(result.error.format(), null, 2),
+      );
+      console.error('Raw AI response:', jsonResponse);
       throw new BadRequestException('Failed to parse AI response');
     }
+
     const totalSeconds = result.data?.questions.reduce(
       (sum, question) => sum + question.estimatedAnswerTimeSeconds + 30,
       0,

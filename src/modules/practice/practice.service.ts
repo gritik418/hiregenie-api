@@ -25,13 +25,7 @@ export class PracticeService {
 
     if (!userId) throw new UnauthorizedException('Please Login.');
 
-    const {
-      difficulty,
-      targetRole,
-      questionCount,
-      customInstructions,
-      estimatedDuration,
-    } = data;
+    const { difficulty, targetRole, questionCount, customInstructions } = data;
 
     const resume = await this.prismaService.resume.findUnique({
       where: {
@@ -48,7 +42,6 @@ export class PracticeService {
       difficulty,
       resume?.aiSummary || resume.rawText,
       questionCount,
-      estimatedDuration,
       customInstructions,
     );
 
@@ -78,6 +71,12 @@ export class PracticeService {
           },
         },
         overview: session.overview,
+        payload: {
+          targetRole,
+          difficulty,
+          questionCount,
+          customInstructions,
+        },
       },
       include: {
         questions: true,
@@ -112,6 +111,7 @@ export class PracticeService {
         updatedAt: true,
         resumeId: true,
         overview: true,
+        payload: true,
         resume: {
           select: {
             fileName: true,

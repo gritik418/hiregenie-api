@@ -160,6 +160,8 @@ model PracticeSession {
 
   questions   PracticeQuestion[]
 
+  payload Json?
+
   resume     Resume    @relation(fields: [resumeId], references: [id], onDelete: Cascade)
   user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
