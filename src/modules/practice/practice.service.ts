@@ -412,7 +412,7 @@ export class PracticeService {
       );
     }
 
-    const response =
+    const { questionEvaluations, ...response } =
       await this.aiEngineService.evaluatePracticeSession(session);
 
     await this.prismaService.practiceSession.update({
@@ -426,10 +426,39 @@ export class PracticeService {
       },
     });
 
+    const overview = {
+      totalQuestions: session.questions.length,
+      answeredQuestions: session.questions.filter(
+        (question) => question.status === PracticeQuestionStatus.ANSWERED,
+      ).length,
+      skippedQuestions: session.questions.filter(
+        (question) => question.status === PracticeQuestionStatus.SKIPPED,
+      ).length,
+      completionPercentage:
+        (session.questions.filter(
+          (question) => question.status === PracticeQuestionStatus.ANSWERED,
+        ).length /
+          session.questions.length) *
+        100,
+      totalTimeSeconds: session.startedAt
+        ? Math.floor(
+            (completedAt.getTime() - session.startedAt.getTime()) / 1000,
+          )
+        : 0,
+    };
+
     const result = await this.prismaService.practiceSessionResult.create({
       data: {
-        sessionId: session.id,
         ...response,
+        sessionId: session.id,
+        overview,
+        questionEvaluations: {
+          create: questionEvaluations.map((questionEvaluation) => {
+            return {
+              ...questionEvaluation,
+            };
+          }),
+        },
       },
     });
 
