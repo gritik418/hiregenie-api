@@ -8,6 +8,7 @@ import { Request } from 'express';
 import { PrismaService } from 'src/database/prisma/prisma.service';
 import GeneratePracticeSessionInputDto from './dto/generate-practice-session.dto';
 import { AiEngineService } from '../ai-engine/ai-engine.service';
+import { PracticeSessionStatus } from 'generated/prisma/enums';
 
 @Injectable()
 export class PracticeService {
@@ -51,7 +52,7 @@ export class PracticeService {
     const practiceSession = await this.prismaService.practiceSession.create({
       data: {
         difficulty,
-        status: 'ACTIVE',
+        status: PracticeSessionStatus.GENERATED,
         targetRole,
         userId,
         resumeId,

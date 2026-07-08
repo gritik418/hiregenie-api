@@ -147,7 +147,7 @@ model PracticeSession {
   userId      String
   resumeId    String
 
-  status PracticeSessionStatus @default(ACTIVE)
+  status PracticeSessionStatus @default(GENERATED)
 
   targetRole  String
 
@@ -159,14 +159,20 @@ model PracticeSession {
   updatedAt   DateTime @updatedAt
 
   questions   PracticeQuestion[]
+  result       PracticeSessionResult?
 
   payload Json?
+
+  startedAt      DateTime?
+  completedAt    DateTime?
+  abandonedAt    DateTime?
 
   resume     Resume    @relation(fields: [resumeId], references: [id], onDelete: Cascade)
   user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([resumeId])
+  @@index([status])
 }
 
 
@@ -189,9 +195,39 @@ model PracticeQuestion {
 
   estimatedAnswerTimeSeconds Int?
 
+  answer      String?
+
+  status      PracticeQuestionStatus @default(PENDING)
+
   tags String[]
 
   createdAt       DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  session PracticeSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@index([sessionId])
+  @@index([status])
+}
+
+model PracticeSessionResult {
+  id          String @id @default(cuid())
+
+  sessionId   String @unique
+
+  overallScore Int
+
+  breakdown Json?
+
+  strengths String[]
+  weaknesses String[]
+  suggestions String[]
+
+  summary String
+  feedback Json?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   session PracticeSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
 }
@@ -205,7 +241,16 @@ enum Difficulty {
 }
 
 enum PracticeSessionStatus {
-  ACTIVE
+  GENERATED
+  IN_PROGRESS
+  SUBMITTED
   COMPLETED
   ABANDONED
+}
+
+enum PracticeQuestionStatus {
+  PENDING
+  ANSWERED
+  EVALUATED
+  SKIPPED
 }
