@@ -390,6 +390,14 @@ export class PracticeService {
     if (!session)
       throw new NotFoundException('No such Practice Session found.');
 
+    if (session.status === PracticeSessionStatus.COMPLETED) {
+      throw new BadRequestException('Session is already completed.');
+    }
+
+    if (session.status === PracticeSessionStatus.ABANDONED) {
+      throw new BadRequestException('Session is already abandoned.');
+    }
+
     if (session.status !== PracticeSessionStatus.IN_PROGRESS) {
       throw new BadRequestException('Session is not in progress.');
     }
@@ -429,6 +437,64 @@ export class PracticeService {
       success: true,
       message: 'Practice session completed successfully.',
       result,
+    };
+  }
+
+  async skipQuestion(sessionId: string, questionId: string, req: Request) {
+    const userId = req?.user?.id;
+    if (!userId) throw new UnauthorizedException('Please Login.');
+    if (!sessionId) throw new BadRequestException('Session ID is required.');
+    if (!questionId) throw new BadRequestException('Question ID is required.');
+
+    const session = await this.prismaService.practiceSession.findUnique({
+      where: {
+        userId,
+        id: sessionId,
+      },
+      select: {
+        id: true,
+        status: true,
+      },
+    });
+
+    if (!session)
+      throw new NotFoundException('No such Practice Session found.');
+
+    if (session.status !== PracticeSessionStatus.IN_PROGRESS) {
+      throw new BadRequestException('Session is not in progress.');
+    }
+
+    const question = await this.prismaService.practiceQuestion.findUnique({
+      where: {
+        sessionId,
+        id: questionId,
+      },
+      select: {
+        id: true,
+        status: true,
+        sessionId: true,
+      },
+    });
+
+    if (!question)
+      throw new NotFoundException('No such Practice Question found.');
+
+    if (question.status !== PracticeQuestionStatus.PENDING)
+      throw new BadRequestException('Question is already answered or skipped.');
+
+    await this.prismaService.practiceQuestion.update({
+      where: {
+        id: questionId,
+        sessionId,
+      },
+      data: {
+        status: PracticeQuestionStatus.SKIPPED,
+      },
+    });
+
+    return {
+      success: true,
+      message: 'Question skipped successfully.',
     };
   }
 }

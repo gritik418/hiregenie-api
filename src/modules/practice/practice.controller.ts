@@ -71,6 +71,16 @@ export class PracticeController {
     return this.practiceService.saveAnswer(sessionId, questionId, data, req);
   }
 
+  @Patch('sessions/:sessionId/questions/:questionId/skip')
+  @HttpCode(HttpStatus.OK)
+  skipQuestion(
+    @Param('sessionId') sessionId: string,
+    @Param('questionId') questionId: string,
+    @Req() req: Request,
+  ) {
+    return this.practiceService.skipQuestion(sessionId, questionId, req);
+  }
+
   @Post('sessions/:sessionId/abandon')
   @HttpCode(HttpStatus.OK)
   abandonSession(@Param('sessionId') sessionId: string, @Req() req: Request) {
