@@ -70,4 +70,10 @@ export class PracticeController {
   ) {
     return this.practiceService.saveAnswer(sessionId, questionId, data, req);
   }
+
+  @Post('sessions/:sessionId/abandon')
+  @HttpCode(HttpStatus.OK)
+  abandonSession(@Param('sessionId') sessionId: string, @Req() req: Request) {
+    return this.practiceService.abandonSession(sessionId, req);
+  }
 }

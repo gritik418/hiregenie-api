@@ -293,7 +293,7 @@ export class PracticeService {
       throw new NotFoundException('No such Practice Question found.');
 
     if (question.status !== PracticeQuestionStatus.PENDING)
-      throw new BadRequestException('Question is already answered.');
+      throw new BadRequestException('Question is already answered or skipped.');
 
     await this.prismaService.practiceQuestion.update({
       where: {
@@ -309,6 +309,55 @@ export class PracticeService {
     return {
       success: true,
       message: 'Answer saved successfully.',
+    };
+  }
+
+  async abandonSession(sessionId: string, req: Request) {
+    const userId = req?.user?.id;
+    if (!userId) throw new UnauthorizedException('Please Login.');
+    if (!sessionId) throw new BadRequestException('Session ID is required.');
+
+    const session = await this.prismaService.practiceSession.findUnique({
+      where: {
+        userId,
+        id: sessionId,
+      },
+      select: {
+        id: true,
+        status: true,
+      },
+    });
+
+    if (!session)
+      throw new NotFoundException('No such Practice Session found.');
+
+    if (session.status !== PracticeSessionStatus.IN_PROGRESS) {
+      throw new BadRequestException('Session is not in progress.');
+    }
+
+    await this.prismaService.practiceQuestion.updateMany({
+      where: {
+        sessionId,
+      },
+      data: {
+        status: PracticeQuestionStatus.SKIPPED,
+      },
+    });
+
+    await this.prismaService.practiceSession.update({
+      where: {
+        id: sessionId,
+        userId,
+      },
+      data: {
+        status: PracticeSessionStatus.ABANDONED,
+        abandonedAt: new Date(),
+      },
+    });
+
+    return {
+      success: true,
+      message: 'Practice session abandoned successfully.',
     };
   }
 }
