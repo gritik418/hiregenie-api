@@ -203,4 +203,44 @@ export class PracticeService {
       session,
     };
   }
+
+  async startPracticeSession(sessionId: string, req: Request) {
+    const userId = req.user?.id;
+    if (!userId) throw new UnauthorizedException('Please Login.');
+    if (!sessionId) throw new BadRequestException('Session ID is required.');
+
+    const session = await this.prismaService.practiceSession.findUnique({
+      where: {
+        userId,
+        id: sessionId,
+      },
+      select: {
+        id: true,
+        status: true,
+      },
+    });
+
+    if (!session)
+      throw new NotFoundException('No such Practice Session found.');
+
+    if (session.status !== PracticeSessionStatus.GENERATED) {
+      throw new BadRequestException('Session is already started or completed.');
+    }
+
+    await this.prismaService.practiceSession.update({
+      where: {
+        id: sessionId,
+        userId,
+      },
+      data: {
+        startedAt: new Date(),
+        status: PracticeSessionStatus.IN_PROGRESS,
+      },
+    });
+
+    return {
+      success: true,
+      message: 'Practice session started successfully.',
+    };
+  }
 }

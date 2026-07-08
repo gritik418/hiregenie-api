@@ -2,6 +2,8 @@ import {
   Body,
   Controller,
   Get,
+  HttpCode,
+  HttpStatus,
   Param,
   Post,
   Req,
@@ -20,11 +22,13 @@ export class PracticeController {
   constructor(private readonly practiceService: PracticeService) {}
 
   @Get('sessions')
+  @HttpCode(HttpStatus.OK)
   getPracticeSessions(@Req() req: Request) {
     return this.practiceService.getPracticeSessions(req);
   }
 
   @Get('sessions/:sessionId')
+  @HttpCode(HttpStatus.OK)
   getPracticeSession(
     @Param('sessionId') sessionId: string,
     @Req() req: Request,
@@ -33,6 +37,7 @@ export class PracticeController {
   }
 
   @Post(':resumeId/generate')
+  @HttpCode(HttpStatus.CREATED)
   generatePracticeSession(
     @Param('resumeId') resumeId: string,
     @Body(new ZodValidationPipe(GeneratePracticeSessionSchema))
@@ -40,5 +45,14 @@ export class PracticeController {
     @Req() req: Request,
   ) {
     return this.practiceService.generatePracticeSession(resumeId, data, req);
+  }
+
+  @Post('sessions/:sessionId/start')
+  @HttpCode(HttpStatus.OK)
+  startPracticeSession(
+    @Param('sessionId') sessionId: string,
+    @Req() req: Request,
+  ) {
+    return this.practiceService.startPracticeSession(sessionId, req);
   }
 }
