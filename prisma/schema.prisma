@@ -202,7 +202,7 @@ model PracticeQuestion {
   tags String[]
 
   createdAt       DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  updatedAt   DateTime @default(now()) @updatedAt
 
   session PracticeSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
 
@@ -223,13 +223,34 @@ model PracticeSessionResult {
   weaknesses String[]
   suggestions String[]
 
+  nextSteps String[]
+  performanceLevel  PerformanceLevel
+  hiringRecommendation HiringRecommendation
+
   summary String
+  reason String?
   feedback Json?
+  questionEvaluations Json?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   session PracticeSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+}
+
+enum HiringRecommendation {
+  NOT_RECOMMENDED
+  CONSIDER
+  RECOMMENDED
+  STRONGLY_RECOMMENDED
+}
+
+enum PerformanceLevel {
+  POOR
+  FAIR
+  GOOD
+  VERY_GOOD
+  EXCELLENT
 }
 
 enum Difficulty {
@@ -243,7 +264,6 @@ enum Difficulty {
 enum PracticeSessionStatus {
   GENERATED
   IN_PROGRESS
-  SUBMITTED
   COMPLETED
   ABANDONED
 }

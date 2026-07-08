@@ -16,6 +16,12 @@ import { AISummaryResponseSchema } from './schemas/ai-summary-response.schema';
 import MatchResumeResponseSchema from './schemas/match-resume-response.schema';
 import PracticeSessionResponseSchema from './schemas/practice-session-response.schema';
 import ResumeAnalysisResponseSchema from './schemas/resume-analysis-response.schema';
+import { PRACTICE_SESSION_EVALUATOR_PROMPTS } from './prompts/practice-session-evaluator';
+import PracticeSessionEvaluationResponseSchema from './schemas/practice-session-evaluation-response.schema';
+import PracticeSessionEvaluationResponseDto from './dto/practice-session-evaluation-response.dto';
+import { HUMAN_PROMPT } from './prompts/practice-session-evaluator/human.prompt';
+import { Difficulty } from 'generated/prisma/enums';
+import { PracticeSession } from 'generated/prisma/client';
 
 @Injectable()
 export class AiEngineService {
@@ -180,11 +186,6 @@ ${rawText}
     const result = PracticeSessionResponseSchema.safeParse(jsonResponse);
 
     if (!result.success) {
-      console.error(
-        'Zod parsing failed:',
-        JSON.stringify(result.error.format(), null, 2),
-      );
-      console.error('Raw AI response:', jsonResponse);
       throw new BadRequestException('Failed to parse AI response');
     }
 
@@ -199,6 +200,45 @@ ${rawText}
       estimatedDurationMinutes,
     );
     return result.data;
+  }
+
+  async evaluatePracticeSession(
+    session: PracticeSession,
+  ): Promise<PracticeSessionEvaluationResponseDto> {
+    const messages: BaseMessage[] = [];
+
+    messages.push(
+      new SystemMessage(
+        this.promptBuilder.build(...PRACTICE_SESSION_EVALUATOR_PROMPTS),
+      ),
+    );
+
+    messages.push(
+      new HumanMessage(
+        HUMAN_PROMPT(session.targetRole, session.difficulty, session),
+      ),
+    );
+
+    console.log(messages);
+
+    const response = await this.model.invoke(messages);
+    const rawText = response.text || response.content.toString();
+    console.log("RAW AI RESPONSE:", rawText);
+
+    try {
+      const result = this.extractJSON<PracticeSessionEvaluationResponseDto>(
+        rawText,
+        PracticeSessionEvaluationResponseSchema,
+      );
+      return result;
+    } catch (e) {
+      console.error("EVALUATION PARSE ERROR:", e);
+      throw new BadRequestException({
+        message: 'Failed to parse AI response',
+        error: e?.message || e,
+        text: rawText,
+      });
+    }
   }
 
   async generateResponseInJSON<T>(

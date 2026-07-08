@@ -97,6 +97,9 @@ export class PracticeService {
             tags: true,
             createdAt: true,
           },
+          orderBy: {
+            id: 'asc',
+          },
         },
       },
     });
@@ -178,6 +181,12 @@ export class PracticeService {
             estimatedAnswerTimeSeconds: true,
             tags: true,
             createdAt: true,
+            answer: true,
+            status: true,
+            updatedAt: true,
+          },
+          orderBy: {
+            id: 'asc',
           },
         },
         resume: {
@@ -358,6 +367,68 @@ export class PracticeService {
     return {
       success: true,
       message: 'Practice session abandoned successfully.',
+    };
+  }
+
+  async submitSession(sessionId: string, req: Request) {
+    const userId = req?.user?.id;
+    if (!userId) throw new UnauthorizedException('Please Login.');
+    if (!sessionId) throw new BadRequestException('Session ID is required.');
+
+    const completedAt: Date = new Date();
+
+    const session = await this.prismaService.practiceSession.findUnique({
+      where: {
+        userId,
+        id: sessionId,
+      },
+      include: {
+        questions: true,
+      },
+    });
+
+    if (!session)
+      throw new NotFoundException('No such Practice Session found.');
+
+    if (session.status !== PracticeSessionStatus.IN_PROGRESS) {
+      throw new BadRequestException('Session is not in progress.');
+    }
+
+    const pendingQuestions = session.questions.filter(
+      (question) => question.status === PracticeQuestionStatus.PENDING,
+    );
+
+    if (pendingQuestions.length > 0) {
+      throw new BadRequestException(
+        'Please answer all questions before submitting.',
+      );
+    }
+
+    const response =
+      await this.aiEngineService.evaluatePracticeSession(session);
+
+    await this.prismaService.practiceSession.update({
+      where: {
+        id: sessionId,
+        userId,
+      },
+      data: {
+        status: PracticeSessionStatus.COMPLETED,
+        completedAt,
+      },
+    });
+
+    const result = await this.prismaService.practiceSessionResult.create({
+      data: {
+        sessionId: session.id,
+        ...response,
+      },
+    });
+
+    return {
+      success: true,
+      message: 'Practice session completed successfully.',
+      result,
     };
   }
 }
