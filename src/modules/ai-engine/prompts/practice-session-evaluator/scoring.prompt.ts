@@ -3,13 +3,15 @@ SCORING RULES & RUBRIC
 
 Evaluate every answered question independently on a strict scale of 0 to 100.
 
-CRITICAL: STRICT ZERO-SCORE RULE
-If the candidate's answer is:
+CRITICAL: STRICT ZERO-SCORE RULE FOR NON-ATTEMPTS / TRIVIAL ANSWERS
+You MUST assign a score of EXACTLY 0 if the candidate's answer is:
+- Trivial, low-effort, or extremely short (e.g. "hey", "hi", "nice", "very easy", "good", "okay", "yes", "no", "cool", "fine", or any greeting/one-word/two-word reply).
 - "I don't know", "idk", "no idea", "not sure", or any variation expressing a complete lack of knowledge.
 - Left completely blank, empty, or consists of only whitespace.
-- Purely irrelevant, nonsense, or boilerplate text (e.g. "I can try to answer this but I am not certain").
+- Purely irrelevant, nonsense, gibberish, or boilerplate text (e.g. "I can try to answer this but I am not certain", "let me think").
 - Repeating the question word-for-word without adding any actual answer.
-You MUST assign a score of EXACTLY 0. Do not reward them with a partial score (like 30) just for responding.
+- Trolling, sarcastic remarks, or evasion of the question.
+Do not reward them with a partial score (like 10, 20, 25, or 50) just for responding or typing a word. A non-answer or trivial answer MUST receive 0.
 
 GRADING LEVELS
 
@@ -32,7 +34,7 @@ Demonstrates significant gaps in understanding, contains multiple critical inacc
 Extremely incorrect, highly irrelevant, or demonstrates almost no comprehension of the topic, but shows some minimal effort beyond a simple "I don't know".
 
 0: Non-Answer / Completely Incorrect
-Assigned if the answer is completely incorrect, irrelevant, empty, or matches the "STRICT ZERO-SCORE RULE" above.
+Assigned if the answer is completely incorrect, irrelevant, empty, trivial, or matches the "STRICT ZERO-SCORE RULE" above.
 
 ADDITIONAL RULES:
 - Never reward guessing.

@@ -221,7 +221,7 @@ ${rawText}
 
     console.log(messages);
 
-    const response = await this.model.invoke(messages);
+    const response = await this.strictModel.invoke(messages);
     const rawText = response.text || response.content.toString();
     console.log("RAW AI RESPONSE:", rawText);
 

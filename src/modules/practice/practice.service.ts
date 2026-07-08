@@ -550,7 +550,11 @@ export class PracticeService {
         sessionId,
       },
       include: {
-        questionEvaluations: true,
+        questionEvaluations: {
+          include: {
+            question: true,
+          },
+        },
       },
     });
 
