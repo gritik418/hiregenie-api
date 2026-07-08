@@ -526,4 +526,41 @@ export class PracticeService {
       message: 'Question skipped successfully.',
     };
   }
+
+  async getPracticeSessionResult(sessionId: string, req: Request) {
+    const userId = req?.user?.id;
+    if (!userId) throw new UnauthorizedException('Please Login.');
+    if (!sessionId) throw new BadRequestException('Session ID is required.');
+
+    const session = await this.prismaService.practiceSession.findUnique({
+      where: {
+        id: sessionId,
+        userId,
+      },
+    });
+
+    if (!session)
+      throw new NotFoundException('No such Practice Session found.');
+
+    if (session.status !== PracticeSessionStatus.COMPLETED)
+      throw new BadRequestException('Practice Session not completed.');
+
+    const result = await this.prismaService.practiceSessionResult.findUnique({
+      where: {
+        sessionId,
+      },
+      include: {
+        questionEvaluations: true,
+      },
+    });
+
+    if (!result)
+      throw new NotFoundException('No such Practice Session Result found.');
+
+    return {
+      success: true,
+      message: 'Practice Session Result fetched successfully.',
+      result,
+    };
+  }
 }

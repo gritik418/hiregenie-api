@@ -92,4 +92,13 @@ export class PracticeController {
   submitSession(@Param('sessionId') sessionId: string, @Req() req: Request) {
     return this.practiceService.submitSession(sessionId, req);
   }
+
+  @Get('sessions/:sessionId/result')
+  @HttpCode(HttpStatus.OK)
+  getPracticeSessionResult(
+    @Param('sessionId') sessionId: string,
+    @Req() req: Request,
+  ) {
+    return this.practiceService.getPracticeSessionResult(sessionId, req);
+  }
 }
