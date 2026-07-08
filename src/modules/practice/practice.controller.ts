@@ -5,16 +5,19 @@ import {
   HttpCode,
   HttpStatus,
   Param,
+  Patch,
   Post,
   Req,
   UseGuards,
 } from '@nestjs/common';
-import { PracticeService } from './practice.service';
+import { Request } from 'express';
 import { AuthGuard } from 'src/common/guards/auth/auth.guard';
 import { ZodValidationPipe } from 'src/common/pipes/zod-validation/zod-validation.pipe';
-import GeneratePracticeSessionSchema from './schemas/generate-practice-session.schema';
 import GeneratePracticeSessionInputDto from './dto/generate-practice-session.dto';
-import { Request } from 'express';
+import SaveAnswerInputDto from './dto/save-answer.dto';
+import { PracticeService } from './practice.service';
+import GeneratePracticeSessionSchema from './schemas/generate-practice-session.schema';
+import SaveAnswerSchema from './schemas/save-answer.schema';
 
 @Controller('practice')
 @UseGuards(AuthGuard)
@@ -54,5 +57,17 @@ export class PracticeController {
     @Req() req: Request,
   ) {
     return this.practiceService.startPracticeSession(sessionId, req);
+  }
+
+  @Patch('sessions/:sessionId/questions/:questionId/answer')
+  @HttpCode(HttpStatus.OK)
+  saveAnswer(
+    @Param('sessionId') sessionId: string,
+    @Param('questionId') questionId: string,
+    @Body(new ZodValidationPipe(SaveAnswerSchema))
+    data: SaveAnswerInputDto,
+    @Req() req: Request,
+  ) {
+    return this.practiceService.saveAnswer(sessionId, questionId, data, req);
   }
 }

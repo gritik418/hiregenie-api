@@ -8,7 +8,11 @@ import { Request } from 'express';
 import { PrismaService } from 'src/database/prisma/prisma.service';
 import GeneratePracticeSessionInputDto from './dto/generate-practice-session.dto';
 import { AiEngineService } from '../ai-engine/ai-engine.service';
-import { PracticeSessionStatus } from 'generated/prisma/enums';
+import {
+  PracticeQuestionStatus,
+  PracticeSessionStatus,
+} from 'generated/prisma/enums';
+import SaveAnswerInputDto from './dto/save-answer.dto';
 
 @Injectable()
 export class PracticeService {
@@ -241,6 +245,70 @@ export class PracticeService {
     return {
       success: true,
       message: 'Practice session started successfully.',
+    };
+  }
+
+  async saveAnswer(
+    sessionId: string,
+    questionId: string,
+    data: SaveAnswerInputDto,
+    req: Request,
+  ) {
+    const userId = req.user?.id;
+    if (!userId) throw new UnauthorizedException('Please Login.');
+    if (!sessionId) throw new BadRequestException('Session ID is required.');
+    if (!questionId) throw new BadRequestException('Question ID is required.');
+    if (!data.answer) throw new BadRequestException('Answer is required.');
+
+    const session = await this.prismaService.practiceSession.findUnique({
+      where: {
+        userId,
+        id: sessionId,
+      },
+      select: {
+        id: true,
+        status: true,
+      },
+    });
+
+    if (!session)
+      throw new NotFoundException('No such Practice Session found.');
+
+    if (session.status !== PracticeSessionStatus.IN_PROGRESS) {
+      throw new BadRequestException('Session is not in progress.');
+    }
+
+    const question = await this.prismaService.practiceQuestion.findUnique({
+      where: {
+        sessionId,
+        id: questionId,
+      },
+      select: {
+        id: true,
+        status: true,
+      },
+    });
+
+    if (!question)
+      throw new NotFoundException('No such Practice Question found.');
+
+    if (question.status !== PracticeQuestionStatus.PENDING)
+      throw new BadRequestException('Question is already answered.');
+
+    await this.prismaService.practiceQuestion.update({
+      where: {
+        id: questionId,
+        sessionId,
+      },
+      data: {
+        status: PracticeQuestionStatus.ANSWERED,
+        answer: data.answer,
+      },
+    });
+
+    return {
+      success: true,
+      message: 'Answer saved successfully.',
     };
   }
 }
