@@ -199,7 +199,7 @@ export class InterviewSessionService {
       data: { sessionId, thinking: true },
     });
 
-    const { message: aiMessageContent } =
+    const { message: aiMessageContent, isLastMessage } =
       await this.aiEngineService.generateInterviewMessage(
         session.user.name || '',
         session.targetRole,
@@ -221,7 +221,7 @@ export class InterviewSessionService {
 
     client.emit(InterviewEvents.MESSAGE, {
       status: 200,
-      data: { message: aiMessageContent },
+      data: { message: aiMessageContent, isLastMessage: !!isLastMessage },
     });
 
     await this.prismaService.interviewMessage.create({
@@ -231,5 +231,17 @@ export class InterviewSessionService {
         role: InterviewMessageRole.ASSISTANT,
       },
     });
+
+    if (isLastMessage) {
+      await this.prismaService.interviewSession.update({
+        where: {
+          id: sessionId,
+        },
+        data: {
+          status: InterviewStatus.COMPLETED,
+          completedAt: new Date(),
+        },
+      });
+    }
   }
 }

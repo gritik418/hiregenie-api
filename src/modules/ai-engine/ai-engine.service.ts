@@ -30,6 +30,8 @@ import {
 import InterviewMessageResponseSchema from './schemas/interview-message-response.schema';
 import InterviewMessageResponseDto from './dto/interview-message-response.dto';
 import { WsException } from '@nestjs/websockets';
+import InitialInterviewMessageResponseDto from './dto/initial-interview-message-response.dto';
+import InitialInterviewMessageResponseSchema from './schemas/initial-interview-message-response.schema';
 
 @Injectable()
 export class AiEngineService {
@@ -254,7 +256,7 @@ ${rawText}
     targetRole: string,
     difficulty: Difficulty,
     resumeSummary: string,
-  ): Promise<InterviewMessageResponseDto> {
+  ): Promise<InitialInterviewMessageResponseDto> {
     const messages: BaseMessage[] = [];
 
     messages.push(
@@ -280,7 +282,8 @@ ${rawText}
 
     const jsonResponse = JSON.parse(response.text);
 
-    const result = InterviewMessageResponseSchema.safeParse(jsonResponse);
+    const result =
+      InitialInterviewMessageResponseSchema.safeParse(jsonResponse);
 
     if (!result.success) {
       throw new WsException({
