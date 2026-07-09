@@ -74,5 +74,6 @@ export class InterviewGateway
     @MessageBody(new ZodValidationPipe(JoinInterviewSchema)) data: unknown,
   ) {
     console.log('Client joined', client.id);
+    client.emit('', {});
   }
 }
