@@ -10,20 +10,20 @@ import {
 } from '@nestjs/websockets';
 
 import { UseFilters, UseGuards } from '@nestjs/common';
-import { Server, Socket } from 'socket.io';
-import { WSAuthGuard } from 'src/common/guards/auth/ws-auth.guard';
-import { ZodValidationPipe } from 'src/common/pipes/zod-validation/zod-validation.pipe';
-import { InterviewEvents } from '../constants/interview.events';
-import { JoinInterviewSchema } from '../schemas/join-interview.schema';
-import { NextFunction } from 'express';
-import * as cookie from 'cookie';
-import { AUTH_COOKIE_NAME } from 'src/common/constants/cookie-names';
 import { JwtService } from '@nestjs/jwt';
-import JoinInterviewDto from '../dto/join-interview.dto';
-import { InterviewSessionService } from '../services/interview-session.service';
-import { HandleAnswerSchema } from '../schemas/handle-answer.schema';
-import HandleAnswerDto from '../dto/handle-answer.dto';
+import * as cookie from 'cookie';
+import { NextFunction } from 'express';
+import { Server, Socket } from 'socket.io';
+import { AUTH_COOKIE_NAME } from 'src/common/constants/cookie-names';
 import { WsExceptionFilter } from 'src/common/filters/ws-exception/ws-exception.filter';
+import { WSAuthGuard } from 'src/common/guards/auth/ws-auth.guard';
+import { WsZodValidationPipe } from 'src/common/pipes/ws-zod-validation/ws-zod-validation.pipe';
+import { InterviewEvents } from '../constants/interview.events';
+import HandleAnswerDto from '../dto/handle-answer.dto';
+import JoinInterviewDto from '../dto/join-interview.dto';
+import { HandleAnswerSchema } from '../schemas/handle-answer.schema';
+import { JoinInterviewSchema } from '../schemas/join-interview.schema';
+import { InterviewSessionService } from '../services/interview-session.service';
 
 @WebSocketGateway({
   namespace: '/',
@@ -74,7 +74,7 @@ export class InterviewGateway
   @SubscribeMessage(InterviewEvents.JOIN)
   async handleJoinInterview(
     @ConnectedSocket() client: Socket,
-    @MessageBody(new ZodValidationPipe(JoinInterviewSchema))
+    @MessageBody(new WsZodValidationPipe(JoinInterviewSchema))
     data: JoinInterviewDto,
   ) {
     return this.interviewSessionService.joinInterview(client, data);
@@ -84,7 +84,7 @@ export class InterviewGateway
   @SubscribeMessage(InterviewEvents.ANSWER)
   async handleAnswer(
     @ConnectedSocket() client: Socket,
-    @MessageBody(new ZodValidationPipe(HandleAnswerSchema))
+    @MessageBody(new WsZodValidationPipe(HandleAnswerSchema))
     data: HandleAnswerDto,
   ) {
     return this.interviewSessionService.handleAnswer(client, data);
