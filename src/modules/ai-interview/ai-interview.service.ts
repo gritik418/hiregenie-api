@@ -95,4 +95,22 @@ export class AiInterviewService {
       sessionId,
     };
   }
+
+  async getInterviewSessions(req: Request) {
+    const userId = req.user?.id;
+    if (!userId) throw new UnauthorizedException('Unauthorized.');
+
+    const interviewSessions =
+      await this.prismaService.interviewSession.findMany({
+        where: {
+          userId,
+        },
+      });
+
+    return {
+      success: true,
+      message: 'Interview sessions fetched successfully.',
+      sessions: interviewSessions,
+    };
+  }
 }

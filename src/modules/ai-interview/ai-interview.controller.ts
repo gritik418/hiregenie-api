@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Get,
   HttpCode,
   HttpStatus,
   Param,
@@ -37,5 +38,11 @@ export class AiInterviewController {
     @Req() req: Request,
   ) {
     return this.aiInterviewService.startInterviewSession(sessionId, req);
+  }
+
+  @Get('sessions')
+  @HttpCode(HttpStatus.OK)
+  async getInterviewSessions(@Req() req: Request) {
+    return this.aiInterviewService.getInterviewSessions(req);
   }
 }
