@@ -45,4 +45,13 @@ export class AiInterviewController {
   async getInterviewSessions(@Req() req: Request) {
     return this.aiInterviewService.getInterviewSessions(req);
   }
+
+  @Get('sessions/:sessionId')
+  @HttpCode(HttpStatus.OK)
+  async getInterviewSessionDetails(
+    @Param('sessionId') sessionId: string,
+    @Req() req: Request,
+  ) {
+    return this.aiInterviewService.getInterviewSessionDetails(sessionId, req);
+  }
 }
