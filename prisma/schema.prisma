@@ -26,6 +26,7 @@ model User {
   resumeAnalysis ResumeAnalysis[]
   resumeMatches ResumeMatchAnalysis[]
   practiceSessions PracticeSession[]
+  interviewSessions InterviewSession[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -49,6 +50,7 @@ model Resume {
   analysis   ResumeAnalysis[]
   resumeMatches ResumeMatchAnalysis[]
   practiceSessions PracticeSession[]
+  interviewSessions InterviewSession[]
 
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
@@ -293,4 +295,74 @@ enum PracticeQuestionStatus {
   ANSWERED
   EVALUATED
   SKIPPED
+}
+
+model InterviewSession {
+  id          String   @id @default(cuid())
+
+  userId      String
+  resumeId    String
+
+  status      InterviewStatus @default(GENERATED)
+
+  targetRole  String
+  difficulty  Difficulty
+  interviewType InterviewType
+
+  startedAt    DateTime?
+  completedAt  DateTime?
+  abandonedAt  DateTime?
+
+  overview Json?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user     User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  resume   Resume @relation(fields: [resumeId], references: [id], onDelete: Cascade)
+
+  messages InterviewMessage[]
+
+  @@index([userId])
+  @@index([resumeId])
+  @@index([status])
+}
+
+enum InterviewStatus {
+  GENERATED
+  IN_PROGRESS
+  COMPLETED
+  ABANDONED
+}
+
+enum InterviewType {
+  HR
+  TECHNICAL
+  MIXED
+  MOCK
+}
+
+model InterviewMessage {
+  id String @id @default(cuid())
+
+  sessionId String
+
+  role InterviewMessageRole
+
+  message String
+
+  category String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  session InterviewSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@index([sessionId])
+}
+
+enum InterviewMessageRole {
+  SYSTEM
+  ASSISTANT
+  USER
 }
