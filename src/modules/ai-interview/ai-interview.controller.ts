@@ -3,6 +3,7 @@ import {
   Controller,
   HttpCode,
   HttpStatus,
+  Param,
   Post,
   Req,
   UseGuards,
@@ -27,5 +28,14 @@ export class AiInterviewController {
     @Req() req: Request,
   ) {
     return this.aiInterviewService.createInterviewSession(data, req);
+  }
+
+  @Post('session/:sessionId/start')
+  @HttpCode(HttpStatus.OK)
+  async startInterviewSession(
+    @Param('sessionId') sessionId: string,
+    @Req() req: Request,
+  ) {
+    return this.aiInterviewService.startInterviewSession(sessionId, req);
   }
 }

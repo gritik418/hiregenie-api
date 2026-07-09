@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   Injectable,
+  NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
 import { Request } from 'express';
@@ -44,6 +45,54 @@ export class AiInterviewService {
       success: true,
       message: 'Interview session created successfully.',
       session: interviewSession,
+    };
+  }
+
+  async startInterviewSession(sessionId: string, req: Request) {
+    const userId = req.user?.id;
+    if (!userId) throw new UnauthorizedException('Unauthorized.');
+
+    const interviewSession =
+      await this.prismaService.interviewSession.findUnique({
+        where: {
+          userId,
+          id: sessionId,
+        },
+      });
+
+    if (!interviewSession)
+      throw new NotFoundException('Interview session not found.');
+
+    if (
+      interviewSession.status !== InterviewStatus.GENERATED &&
+      interviewSession.status !== InterviewStatus.IN_PROGRESS
+    ) {
+      throw new BadRequestException('Cannot start interview session.');
+    }
+
+    if (interviewSession.status === InterviewStatus.IN_PROGRESS) {
+      return {
+        success: true,
+        message: 'Interview session is already started.',
+        sessionId,
+      };
+    }
+
+    await this.prismaService.interviewSession.update({
+      where: {
+        userId,
+        id: sessionId,
+      },
+      data: {
+        startedAt: new Date(),
+        status: InterviewStatus.IN_PROGRESS,
+      },
+    });
+
+    return {
+      success: true,
+      message: 'Interview session started.',
+      sessionId,
     };
   }
 }
