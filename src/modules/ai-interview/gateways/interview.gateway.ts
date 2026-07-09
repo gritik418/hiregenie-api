@@ -9,7 +9,7 @@ import {
   WebSocketServer,
 } from '@nestjs/websockets';
 
-import { UseGuards } from '@nestjs/common';
+import { UseFilters, UseGuards } from '@nestjs/common';
 import { Server, Socket } from 'socket.io';
 import { WSAuthGuard } from 'src/common/guards/auth/ws-auth.guard';
 import { ZodValidationPipe } from 'src/common/pipes/zod-validation/zod-validation.pipe';
@@ -23,6 +23,7 @@ import JoinInterviewDto from '../dto/join-interview.dto';
 import { InterviewSessionService } from '../services/interview-session.service';
 import { HandleAnswerSchema } from '../schemas/handle-answer.schema';
 import HandleAnswerDto from '../dto/handle-answer.dto';
+import { WsExceptionFilter } from 'src/common/filters/ws-exception/ws-exception.filter';
 
 @WebSocketGateway({
   namespace: '/',
@@ -30,6 +31,7 @@ import HandleAnswerDto from '../dto/handle-answer.dto';
     origin: '*',
   },
 })
+@UseFilters(new WsExceptionFilter())
 export class InterviewGateway
   implements OnGatewayConnection, OnGatewayDisconnect, OnGatewayInit
 {
