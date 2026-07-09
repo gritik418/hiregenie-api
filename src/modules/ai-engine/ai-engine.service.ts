@@ -22,6 +22,11 @@ import PracticeSessionEvaluationResponseDto from './dto/practice-session-evaluat
 import { HUMAN_PROMPT } from './prompts/practice-session-evaluator/human.prompt';
 import { Difficulty } from 'generated/prisma/enums';
 import { PracticeSession } from 'generated/prisma/client';
+import { InterviewSession } from 'generated/prisma/browser';
+import { INTERVIEW_SESSION_PROMPTS } from './prompts/interview-session';
+import InterviewMessageResponseSchema from './schemas/interview-message-response.schema';
+import InterviewMessageResponseDto from './dto/interview-message-response.dto';
+import { WsException } from '@nestjs/websockets';
 
 @Injectable()
 export class AiEngineService {
@@ -223,7 +228,7 @@ ${rawText}
 
     const response = await this.strictModel.invoke(messages);
     const rawText = response.text || response.content.toString();
-    console.log("RAW AI RESPONSE:", rawText);
+    console.log('RAW AI RESPONSE:', rawText);
 
     try {
       const result = this.extractJSON<PracticeSessionEvaluationResponseDto>(
@@ -232,13 +237,57 @@ ${rawText}
       );
       return result;
     } catch (e) {
-      console.error("EVALUATION PARSE ERROR:", e);
+      console.error('EVALUATION PARSE ERROR:', e);
       throw new BadRequestException({
         message: 'Failed to parse AI response',
         error: e?.message || e,
         text: rawText,
       });
     }
+  }
+
+  async generateInterviewSessionMessage(
+    candidateName: string,
+    targetRole: string,
+    difficulty: Difficulty,
+    resumeSummary: string,
+  ): Promise<InterviewMessageResponseDto> {
+    const messages: BaseMessage[] = [];
+
+    messages.push(
+      new SystemMessage(this.promptBuilder.build(...INTERVIEW_SESSION_PROMPTS)),
+    );
+
+    messages.push(
+      new HumanMessage(
+        `
+       Candidate Name: ${candidateName}
+       
+       Target Role: 
+       ${targetRole}
+       
+       Difficulty Level: ${difficulty}
+
+       Resume Summary: ${resumeSummary}
+       `,
+      ),
+    );
+
+    const response = await this.model.invoke(messages);
+
+    const jsonResponse = JSON.parse(response.text);
+
+    const result = InterviewMessageResponseSchema.safeParse(jsonResponse);
+
+    if (!result.success) {
+      throw new WsException({
+        code: 'INTERVIEW_MESSAGE_RESPONSE_FAILED',
+        message: 'Failed to parse AI response',
+        text: response.text,
+      });
+    }
+
+    return result.data;
   }
 
   async generateResponseInJSON<T>(

@@ -19,6 +19,8 @@ import { NextFunction } from 'express';
 import * as cookie from 'cookie';
 import { AUTH_COOKIE_NAME } from 'src/common/constants/cookie-names';
 import { JwtService } from '@nestjs/jwt';
+import JoinInterviewDto from '../dto/join-interview.dto';
+import { InterviewSessionService } from '../services/interview-session.service';
 
 @WebSocketGateway({
   namespace: '/',
@@ -31,7 +33,10 @@ export class InterviewGateway
 {
   @WebSocketServer()
   server: Server;
-  constructor(private readonly jwtService: JwtService) {}
+  constructor(
+    private readonly jwtService: JwtService,
+    private readonly interviewSessionService: InterviewSessionService,
+  ) {}
 
   afterInit(server: Server) {
     server.use(async (socket: Socket, next: NextFunction) => {
@@ -61,19 +66,13 @@ export class InterviewGateway
     console.log('Disconnected', client.id);
   }
 
-  @SubscribeMessage('ping')
-  @UseGuards(WSAuthGuard)
-  handlePing(@ConnectedSocket() client: Socket) {
-    console.log('Ping', client.user);
-  }
-
   @UseGuards(WSAuthGuard)
   @SubscribeMessage(JOIN_INTERVIEW)
-  handleJoinInterview(
+  async handleJoinInterview(
     @ConnectedSocket() client: Socket,
-    @MessageBody(new ZodValidationPipe(JoinInterviewSchema)) data: unknown,
+    @MessageBody(new ZodValidationPipe(JoinInterviewSchema))
+    data: JoinInterviewDto,
   ) {
-    console.log('Client joined', client.id);
-    client.emit('', {});
+    return this.interviewSessionService.joinInterview(client, data);
   }
 }
