@@ -6,6 +6,7 @@ import { CONVERSATION_RULES_SYSTEM_PROMPT } from './conversation-rules.prompt';
 import { CONVERSATION_OUTPUT_SCHEMA_SYSTEM_PROMPT } from './conversation-output-schema.prompt';
 import { CANDIDATE_RULES_SYSTEM_PROMPT } from './candidate-rules.prompt';
 import { QUESTION_RULES_SYSTEM_PROMPT } from './question-rules.prompt';
+import { TIME_WASTING_RULES_SYSTEM_PROMPT } from './time-wasting-rules.prompt';
 
 export const INTERVIEW_SESSION_PROMPTS = [
   ROLE_SYSTEM_PROMPT,
@@ -18,8 +19,10 @@ export const INTERVIEW_CONVERSATION_PROMPTS = [
   ROLE_SYSTEM_PROMPT,
   CANDIDATE_RULES_SYSTEM_PROMPT,
   QUESTION_RULES_SYSTEM_PROMPT,
+  TIME_WASTING_RULES_SYSTEM_PROMPT,
   CONVERSATION_RULES_SYSTEM_PROMPT,
   CONVERSATION_OUTPUT_SCHEMA_SYSTEM_PROMPT,
   OUTPUT_SYSTEM_PROMPT,
 ];
+
 
