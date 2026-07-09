@@ -1,7 +1,7 @@
 import { ChatOllama } from '@langchain/ollama';
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { BaseMessage, HumanMessage, SystemMessage } from 'langchain';
+import { AIMessage, BaseMessage, HumanMessage, SystemMessage } from 'langchain';
 import { ZodSchema } from 'zod';
 import { PromptBuilder } from './builders/prompt.builder';
 import AISummaryResponseDto from './dto/ai-summary-response.dto';
@@ -21,9 +21,12 @@ import PracticeSessionEvaluationResponseSchema from './schemas/practice-session-
 import PracticeSessionEvaluationResponseDto from './dto/practice-session-evaluation-response.dto';
 import { HUMAN_PROMPT } from './prompts/practice-session-evaluator/human.prompt';
 import { Difficulty } from 'generated/prisma/enums';
-import { PracticeSession } from 'generated/prisma/client';
+import { InterviewMessage, PracticeSession } from 'generated/prisma/client';
 import { InterviewSession } from 'generated/prisma/browser';
-import { INTERVIEW_SESSION_PROMPTS } from './prompts/interview-session';
+import {
+  INTERVIEW_SESSION_PROMPTS,
+  INTERVIEW_CONVERSATION_PROMPTS,
+} from './prompts/interview-session';
 import InterviewMessageResponseSchema from './schemas/interview-message-response.schema';
 import InterviewMessageResponseDto from './dto/interview-message-response.dto';
 import { WsException } from '@nestjs/websockets';
@@ -272,6 +275,68 @@ ${rawText}
        `,
       ),
     );
+
+    const response = await this.model.invoke(messages);
+
+    const jsonResponse = JSON.parse(response.text);
+
+    const result = InterviewMessageResponseSchema.safeParse(jsonResponse);
+
+    if (!result.success) {
+      throw new WsException({
+        code: 'INTERVIEW_MESSAGE_RESPONSE_FAILED',
+        message: 'Failed to parse AI response',
+        text: response.text,
+      });
+    }
+
+    return result.data;
+  }
+
+  async generateInterviewMessage(
+    candidateName: string,
+    targetRole: string,
+    difficulty: Difficulty,
+    resumeSummary: string,
+    history: InterviewMessage[],
+  ): Promise<InterviewMessageResponseDto> {
+    const messages: BaseMessage[] = [];
+
+    messages.push(
+      new SystemMessage(
+        this.promptBuilder.build(...INTERVIEW_CONVERSATION_PROMPTS),
+      ),
+    );
+
+    messages.push(
+      new HumanMessage(
+        `
+        Candidate Name: ${candidateName}
+        Target Role: ${targetRole}
+        Difficulty Level: ${difficulty}
+        Resume Summary: ${resumeSummary}
+        
+        The candidate has started the interview. Following is the ongoing chat history of the interview session.
+        
+        `,
+      ),
+    );
+
+    messages.push(
+      new AIMessage(
+        `Understood. I will act as Genie, the AI interviewer, for candidate ${candidateName || 'User'}. I have reviewed their resume and will follow the conversation history to conduct the interview.`,
+      ),
+    );
+
+    for (const msg of history) {
+      if (msg.role === 'USER') {
+        messages.push(new HumanMessage(msg.message));
+      } else if (msg.role === 'ASSISTANT') {
+        messages.push(new AIMessage(msg.message));
+      } else if (msg.role === 'SYSTEM') {
+        messages.push(new SystemMessage(msg.message));
+      }
+    }
 
     const response = await this.model.invoke(messages);
 
