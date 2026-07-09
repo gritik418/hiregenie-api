@@ -54,4 +54,13 @@ export class AiInterviewController {
   ) {
     return this.aiInterviewService.getInterviewSessionDetails(sessionId, req);
   }
+
+  @Post('sessions/:sessionId/abandon')
+  @HttpCode(HttpStatus.OK)
+  async abandonInterviewSession(
+    @Param('sessionId') sessionId: string,
+    @Req() req: Request,
+  ) {
+    return this.aiInterviewService.abandonInterviewSession(sessionId, req);
+  }
 }

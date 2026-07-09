@@ -139,4 +139,41 @@ export class AiInterviewService {
       session: interviewSession,
     };
   }
+
+  async abandonInterviewSession(sessionId: string, req: Request) {
+    const userId = req.user?.id;
+    if (!userId) throw new UnauthorizedException('Unauthorized.');
+
+    const interviewSession =
+      await this.prismaService.interviewSession.findUnique({
+        where: {
+          userId,
+          id: sessionId,
+        },
+      });
+
+    if (!interviewSession)
+      throw new NotFoundException('Interview session not found.');
+
+    if (interviewSession.status !== InterviewStatus.IN_PROGRESS) {
+      throw new BadRequestException('Cannot abandon interview session.');
+    }
+
+    await this.prismaService.interviewSession.update({
+      where: {
+        userId,
+        id: sessionId,
+      },
+      data: {
+        status: InterviewStatus.ABANDONED,
+        abandonedAt: new Date(),
+      },
+    });
+
+    return {
+      success: true,
+      message: 'Interview session abandoned.',
+      sessionId,
+    };
+  }
 }
