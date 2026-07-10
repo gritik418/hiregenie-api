@@ -233,6 +233,11 @@ export class InterviewSessionService {
     });
 
     if (isLastMessage) {
+      client.emit(InterviewEvents.SESSION_ENDED, {
+        status: 200,
+        data: { sessionId },
+      });
+
       await this.prismaService.interviewSession.update({
         where: {
           id: sessionId,

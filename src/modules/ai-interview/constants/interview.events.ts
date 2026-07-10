@@ -14,4 +14,6 @@ export const InterviewEvents = {
   CHUNK: 'interview:chunk',
   MESSAGE: 'interview:message',
   ERROR: 'interview:error',
+
+  SESSION_ENDED: 'interview:session_ended',
 } as const;
