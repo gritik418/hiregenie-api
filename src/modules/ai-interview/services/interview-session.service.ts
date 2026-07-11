@@ -246,10 +246,29 @@ export class InterviewSessionService {
           completedAt: new Date(),
         },
       });
+
+      client.emit(InterviewEvents.REPORT_GENERATING, {
+        status: 200,
+        data: { sessionId },
+      });
+
+      const report = await this.generateInterviewReport(client, sessionId);
+
+      if (report) {
+        client.emit(InterviewEvents.REPORT_GENERATED, {
+          status: 200,
+          data: { sessionId, report },
+        });
+      } else {
+        client.emit(InterviewEvents.REPORT_GENERATION_FAILED, {
+          status: 200,
+          data: { sessionId, error: 'Report generation failed.' },
+        });
+      }
     }
   }
 
-  async generateInterviewReport(sessionId: string) {
+  async generateInterviewReport(client: Socket, sessionId: string) {
     const session = await this.prismaService.interviewSession.findUnique({
       where: {
         id: sessionId,
@@ -274,17 +293,29 @@ export class InterviewSessionService {
       },
     });
 
-    if (!session)
-      throw new WsException({
-        code: 'SESSION_NOT_FOUND',
-        message: 'Interview session not found',
+    if (!session) {
+      client.emit(InterviewEvents.REPORT_GENERATION_FAILED, {
+        status: 200,
+        data: { sessionId, error: 'Session not found.' },
       });
 
-    if (session.status !== InterviewStatus.COMPLETED)
+      throw new WsException({
+        code: 'SESSION_NOT_FOUND',
+        message: 'Interview session not found.',
+      });
+    }
+
+    if (session.status !== InterviewStatus.COMPLETED) {
+      client.emit(InterviewEvents.REPORT_GENERATION_FAILED, {
+        status: 200,
+        data: { sessionId, error: 'Session not completed.' },
+      });
+
       throw new WsException({
         code: 'SESSION_NOT_COMPLETED',
-        message: 'Interview session is not completed',
+        message: 'Interview session is not completed.',
       });
+    }
 
     const report = await this.aiEngineService.generateInterviewSessionReport(
       session.user.name || '',
@@ -296,6 +327,11 @@ export class InterviewSessionService {
     );
 
     if (!report) {
+      client.emit(InterviewEvents.REPORT_GENERATION_FAILED, {
+        status: 200,
+        data: { sessionId, error: 'Report generation failed.' },
+      });
+
       await this.prismaService.interviewReport.create({
         data: {
           sessionId,

@@ -16,4 +16,8 @@ export const InterviewEvents = {
   ERROR: 'interview:error',
 
   SESSION_ENDED: 'interview:session_ended',
+
+  REPORT_GENERATED: 'interview:report_generated',
+  REPORT_GENERATION_FAILED: 'interview:report_generation_failed',
+  REPORT_GENERATING: 'interview:report_generating',
 } as const;
