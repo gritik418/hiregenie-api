@@ -176,4 +176,29 @@ export class AiInterviewService {
       sessionId,
     };
   }
+
+  async getInterviewReport(sessionId: string, req: Request) {
+    const userId = req.user?.id;
+    if (!userId) throw new UnauthorizedException('Unauthorized.');
+
+    const interviewReport = await this.prismaService.interviewReport.findUnique(
+      {
+        where: {
+          sessionId,
+        },
+        include: {
+          session: true,
+        },
+      },
+    );
+
+    if (!interviewReport)
+      throw new NotFoundException('Interview report not found.');
+
+    return {
+      success: true,
+      message: 'Interview report fetched successfully.',
+      report: interviewReport,
+    };
+  }
 }
