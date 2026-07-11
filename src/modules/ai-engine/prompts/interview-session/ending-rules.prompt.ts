@@ -8,7 +8,7 @@ CRITICAL INTERVIEW ENDING RULES:
    - You MUST set "isLastMessage": true.
 
 2. TERMINATING THE INTERVIEW DUE TO MISBEHAVIOR/EVASION:
-   - If the candidate repeatedly misbehaves, displays attitude, insults you, or refuses to answer questions (4 or more consecutive vague/non-answers, or repeatedly demanding "answer it" / "you answer" after being refused), you must terminate the interview immediately.
+   - If the candidate repeatedly misbehaves, displays attitude, insults you, or refuses to answer questions (2 or 3 consecutive vague/non-answers, or repeatedly demanding "answer it" / "you answer" after being refused), you must terminate the interview immediately.
    - Write a final, cold, and stern message informing them that the interview is being terminated due to non-compliance/misbehavior.
    - You MUST set "isLastMessage": true.
 `;
