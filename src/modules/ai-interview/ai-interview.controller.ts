@@ -72,4 +72,13 @@ export class AiInterviewController {
   ) {
     return this.aiInterviewService.getInterviewReport(sessionId, req);
   }
+
+  @Post('generate-report/:sessionId')
+  @HttpCode(HttpStatus.OK)
+  async generateInterviewReport(
+    @Param('sessionId') sessionId: string,
+    @Req() req: Request,
+  ) {
+    return this.aiInterviewService.generateInterviewReport(sessionId, req);
+  }
 }

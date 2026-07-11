@@ -7,11 +7,15 @@ import {
 import { Request } from 'express';
 import { PrismaService } from 'src/database/prisma/prisma.service';
 import CreateInterviewSessionDto from './dto/create-interview-session.dto';
-import { InterviewStatus } from 'generated/prisma/enums';
+import { InterviewReportStatus, InterviewStatus } from 'generated/prisma/enums';
+import { AiEngineService } from '../ai-engine/ai-engine.service';
 
 @Injectable()
 export class AiInterviewService {
-  constructor(private readonly prismaService: PrismaService) {}
+  constructor(
+    private readonly prismaService: PrismaService,
+    private readonly aiEngineService: AiEngineService,
+  ) {}
 
   async createInterviewSession(data: CreateInterviewSessionDto, req: Request) {
     const userId = req.user?.id;
@@ -198,6 +202,57 @@ export class AiInterviewService {
     return {
       success: true,
       message: 'Interview report fetched successfully.',
+      report: interviewReport,
+    };
+  }
+
+  async generateInterviewReport(sessionId: string, req: Request) {
+    const userId = req.user?.id;
+    if (!userId) throw new UnauthorizedException('Unauthorized.');
+
+    const interviewSession =
+      await this.prismaService.interviewSession.findUnique({
+        where: {
+          userId,
+          id: sessionId,
+        },
+        include: {
+          messages: true,
+          resume: true,
+          user: true,
+        },
+      });
+
+    if (!interviewSession)
+      throw new NotFoundException('Interview session not found.');
+
+    if (interviewSession.status !== InterviewStatus.COMPLETED) {
+      throw new BadRequestException('Interview session is not completed.');
+    }
+
+    const report = await this.aiEngineService.generateInterviewSessionReport(
+      interviewSession.user.name || '',
+      interviewSession.targetRole,
+      interviewSession.difficulty,
+      interviewSession.resume.aiSummary ??
+        interviewSession.resume.rawText ??
+        '',
+      interviewSession.messages,
+      true,
+    );
+
+    const interviewReport = await this.prismaService.interviewReport.create({
+      data: {
+        sessionId,
+        status: InterviewReportStatus.COMPLETED,
+        createdAt: new Date(),
+        ...report,
+      },
+    });
+
+    return {
+      success: true,
+      message: 'Interview report generated successfully.',
       report: interviewReport,
     };
   }
