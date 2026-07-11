@@ -1,17 +1,16 @@
-import {
-  BadRequestException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
-import JoinInterviewDto from '../dto/join-interview.dto';
-import HandleAnswerDto from '../dto/handle-answer.dto';
-import { PrismaService } from 'src/database/prisma/prisma.service';
-import { InterviewMessageRole, InterviewStatus } from 'generated/prisma/enums';
-import { Socket } from 'socket.io';
+import { Injectable } from '@nestjs/common';
 import { WsException } from '@nestjs/websockets';
+import {
+  InterviewMessageRole,
+  InterviewReportStatus,
+  InterviewStatus,
+} from 'generated/prisma/enums';
+import { Socket } from 'socket.io';
+import { PrismaService } from 'src/database/prisma/prisma.service';
 import { AiEngineService } from 'src/modules/ai-engine/ai-engine.service';
 import { InterviewEvents } from '../constants/interview.events';
-import { InterviewSession } from 'generated/prisma/browser';
+import HandleAnswerDto from '../dto/handle-answer.dto';
+import JoinInterviewDto from '../dto/join-interview.dto';
 
 @Injectable()
 export class InterviewSessionService {
@@ -248,5 +247,76 @@ export class InterviewSessionService {
         },
       });
     }
+  }
+
+  async generateInterviewReport(sessionId: string) {
+    const session = await this.prismaService.interviewSession.findUnique({
+      where: {
+        id: sessionId,
+      },
+      include: {
+        user: {
+          select: {
+            name: true,
+          },
+        },
+        resume: {
+          select: {
+            aiSummary: true,
+            rawText: true,
+          },
+        },
+        messages: {
+          orderBy: {
+            createdAt: 'asc',
+          },
+        },
+      },
+    });
+
+    if (!session)
+      throw new WsException({
+        code: 'SESSION_NOT_FOUND',
+        message: 'Interview session not found',
+      });
+
+    if (session.status !== InterviewStatus.COMPLETED)
+      throw new WsException({
+        code: 'SESSION_NOT_COMPLETED',
+        message: 'Interview session is not completed',
+      });
+
+    const report = await this.aiEngineService.generateInterviewSessionReport(
+      session.user.name || '',
+      session.targetRole,
+      session.difficulty,
+      session.resume.aiSummary ?? session.resume.rawText ?? '',
+      session.messages,
+      false,
+    );
+
+    if (!report) {
+      await this.prismaService.interviewReport.create({
+        data: {
+          sessionId,
+          status: InterviewReportStatus.FAILED,
+        },
+      });
+
+      throw new WsException({
+        code: 'AI_ERROR',
+        message: 'Failed to generate interview session report.',
+      });
+    }
+
+    await this.prismaService.interviewReport.create({
+      data: {
+        sessionId,
+        status: InterviewReportStatus.COMPLETED,
+        ...report,
+      },
+    });
+
+    return report;
   }
 }

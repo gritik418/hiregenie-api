@@ -27,11 +27,15 @@ import {
   INTERVIEW_SESSION_PROMPTS,
   INTERVIEW_CONVERSATION_PROMPTS,
 } from './prompts/interview-session';
+import { INTERVIEW_SESSION_REPORT_PROMPTS } from './prompts/interview-session-report';
+import { HUMAN_PROMPT as INTERVIEW_REPORT_HUMAN_PROMPT } from './prompts/interview-session-report/human.prompt';
 import InterviewMessageResponseSchema from './schemas/interview-message-response.schema';
 import InterviewMessageResponseDto from './dto/interview-message-response.dto';
 import { WsException } from '@nestjs/websockets';
 import InitialInterviewMessageResponseDto from './dto/initial-interview-message-response.dto';
 import InitialInterviewMessageResponseSchema from './schemas/initial-interview-message-response.schema';
+import InterviewReportResponseDto from './dto/interview-report-response.dto';
+import InterviewReportResponseSchema from './schemas/interview-report-response.schema';
 
 @Injectable()
 export class AiEngineService {
@@ -353,6 +357,55 @@ ${rawText}
         message: 'Failed to parse AI response',
         text: response.text,
       });
+    }
+
+    return result.data;
+  }
+
+  async generateInterviewSessionReport(
+    candidateName: string,
+    targetRole: string,
+    difficulty: Difficulty,
+    resumeSummary: string,
+    history: InterviewMessage[],
+    isHttpRequest: boolean,
+  ): Promise<InterviewReportResponseDto> {
+    const messages: BaseMessage[] = [];
+
+    messages.push(
+      new SystemMessage(
+        this.promptBuilder.build(...INTERVIEW_SESSION_REPORT_PROMPTS),
+      ),
+    );
+
+    messages.push(
+      new HumanMessage(
+        INTERVIEW_REPORT_HUMAN_PROMPT(
+          candidateName,
+          targetRole,
+          difficulty,
+          resumeSummary,
+          history,
+        ),
+      ),
+    );
+
+    const response = await this.model.invoke(messages);
+
+    const jsonResponse = JSON.parse(response.text);
+
+    const result = InterviewReportResponseSchema.safeParse(jsonResponse);
+
+    if (!result.success) {
+      if (isHttpRequest) {
+        throw new BadRequestException('Failed to parse AI response');
+      } else {
+        throw new WsException({
+          code: 'INTERVIEW_MESSAGE_RESPONSE_FAILED',
+          message: 'Failed to parse AI response',
+          text: response.text,
+        });
+      }
     }
 
     return result.data;

@@ -320,6 +320,7 @@ model InterviewSession {
 
   user     User @relation(fields: [userId], references: [id], onDelete: Cascade)
   resume   Resume @relation(fields: [resumeId], references: [id], onDelete: Cascade)
+  report InterviewReport? 
 
   messages InterviewMessage[]
 
@@ -365,4 +366,44 @@ enum InterviewMessageRole {
   SYSTEM
   ASSISTANT
   USER
+}
+
+enum InterviewReportStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
+model InterviewReport {
+  id          String                  @id @default(uuid())
+  sessionId   String                  @unique
+
+  status      InterviewReportStatus   @default(PENDING)
+
+  overallScore Int?
+
+  communicationScore Int?
+  technicalScore     Int?
+  problemSolvingScore Int?
+  confidenceScore     Int?
+
+  summary        String?
+  strengths      String[]
+  weaknesses     String[]
+  improvements   String[]
+
+  questionAnalysis Json?
+
+  hiringRecommendation String?
+  recommendationReason String?
+
+  feedback Json?
+
+  generatedAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  session InterviewSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
 }
