@@ -236,12 +236,12 @@ export class AiInterviewService {
       },
     });
 
-    // if (existingReport)
-    //   return {
-    //     success: true,
-    //     message: 'Interview report already exists.',
-    //     report: existingReport,
-    //   };
+    if (existingReport)
+      return {
+        success: true,
+        message: 'Interview report already exists.',
+        report: existingReport,
+      };
 
     const report = await this.aiEngineService.generateInterviewSessionReport(
       interviewSession.user.name || '',
