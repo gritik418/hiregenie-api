@@ -13,6 +13,11 @@ Evaluate the candidate on the following criteria:
 Provide a detailed summary, strengths, weaknesses, areas for improvement, demonstrated and missing skills, a question-by-question analysis, actionable next steps, and a final hiring recommendation.
 Ensure that NO field in the JSON response is left null. Objects like recommendation must be fully populated.
 For most arrays (e.g., strengths, weaknesses, nextSteps, skills.missing), provide relevant items.
-CRITICAL EXCEPTION: For "skills.demonstrated", ONLY list skills the candidate actually demonstrated during the interview. Do not forcefully add skills if none were demonstrated; in that case, leave it as an empty array [].
+
+CRITICAL INSTRUCTIONS:
+1. STRICT SCORING: If the candidate is uncooperative, evasive, refuses to answer, or gives one-word dismissive answers (e.g., "no", "idk"), you MUST severely penalize their scores. In such cases, the overall score and individual scores (technical, communication, problem-solving, confidence) should be extremely low or 0.
+2. DEMONSTRATED SKILLS: For "skills.demonstrated", ONLY list skills the candidate actually talked about and demonstrated DURING THE INTERVIEW CONVERSATION. Do not pull skills directly from their resume if they did not discuss them. If they were uncooperative or didn't answer technical questions, leave it as an empty array [].
+3. STRENGTHS: Only list strengths that were actually shown in the interview. If the candidate was entirely uncooperative, state that no strengths were demonstrated.
+
 Be objective, professional, and base your conclusions solely on the provided interview transcript and resume context.
 `;
