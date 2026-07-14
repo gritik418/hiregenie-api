@@ -19,6 +19,7 @@ CRITICAL INSTRUCTIONS:
 2. DEMONSTRATED SKILLS: For "skills.demonstrated", ONLY list skills the candidate actually talked about and demonstrated DURING THE INTERVIEW CONVERSATION. Do not pull skills directly from their resume if they did not discuss them. If they were uncooperative or didn't answer technical questions, leave it as an empty array [].
 3. STRENGTHS: Only list strengths that were actually shown in the interview. If the candidate was entirely uncooperative, state that no strengths were demonstrated.
 4. NEXT STEPS: In the "nextSteps" array, provide at least 5 highly specific and actionable suggestions on what the candidate should do to improve their chances of getting hired. Tailor these exactly to their performance (e.g., if communication was bad, suggest ways to improve it; if they were unprofessional/abusive, suggest improving their attitude; if they lacked specific technical knowledge, suggest what to study).
+5. RECOMMENDATION CONFIDENCE: The "recommendation.confidence" field represents YOUR (the AI's) confidence in the final hiring decision, NOT the candidate's confidence. If you confidently recommend "NO_HIRE" because the candidate was extremely evasive or abusive, the recommendation.confidence should be very high (e.g., 90-100). Do not confuse this with "scores.confidence", which is the candidate's own confidence level.
 
 Be objective, professional, and base your conclusions solely on the provided interview transcript and resume context.
 `;
