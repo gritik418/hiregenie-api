@@ -3,7 +3,7 @@ import { z } from 'zod';
 export const InterviewReportResponseSchema = z.object({
   overallScore: z.number().min(0).max(100),
 
-  summary: z.string().min(20).max(1000),
+  summary: z.string(),
 
   scores: z.object({
     technical: z.number().min(0).max(100),
@@ -12,11 +12,11 @@ export const InterviewReportResponseSchema = z.object({
     confidence: z.number().min(0).max(100),
   }),
 
-  strengths: z.array(z.string()).min(3).max(6),
+  strengths: z.array(z.string()),
 
-  weaknesses: z.array(z.string()).min(2).max(5),
+  weaknesses: z.array(z.string()),
 
-  improvements: z.array(z.string()).min(3).max(8),
+  improvements: z.array(z.string()),
 
   skills: z.object({
     demonstrated: z.array(z.string()),
@@ -45,7 +45,7 @@ export const InterviewReportResponseSchema = z.object({
     reason: z.string(),
   }),
 
-  nextSteps: z.array(z.string()).min(3).max(8),
+  nextSteps: z.array(z.string()),
 });
 
 export default InterviewReportResponseSchema;

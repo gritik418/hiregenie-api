@@ -10,6 +10,9 @@ Evaluate the candidate on the following criteria:
 3. Problem Solving Skills
 4. Confidence
 
-Provide a detailed summary, strengths, weaknesses, areas for improvement, and a final hiring recommendation.
+Provide a detailed summary, strengths, weaknesses, areas for improvement, demonstrated and missing skills, a question-by-question analysis, actionable next steps, and a final hiring recommendation.
+Ensure that NO field in the JSON response is left null. Objects like recommendation must be fully populated.
+For most arrays (e.g., strengths, weaknesses, nextSteps, skills.missing), provide relevant items.
+CRITICAL EXCEPTION: For "skills.demonstrated", ONLY list skills the candidate actually demonstrated during the interview. Do not forcefully add skills if none were demonstrated; in that case, leave it as an empty array [].
 Be objective, professional, and base your conclusions solely on the provided interview transcript and resume context.
 `;

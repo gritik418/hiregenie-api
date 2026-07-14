@@ -230,6 +230,19 @@ export class AiInterviewService {
       throw new BadRequestException('Interview session is not completed.');
     }
 
+    const existingReport = await this.prismaService.interviewReport.findUnique({
+      where: {
+        sessionId,
+      },
+    });
+
+    // if (existingReport)
+    //   return {
+    //     success: true,
+    //     message: 'Interview report already exists.',
+    //     report: existingReport,
+    //   };
+
     const report = await this.aiEngineService.generateInterviewSessionReport(
       interviewSession.user.name || '',
       interviewSession.targetRole,
@@ -241,28 +254,22 @@ export class AiInterviewService {
       true,
     );
 
-    const interviewReport = await this.prismaService.interviewReport.create({
-      data: {
+    const interviewReport = await this.prismaService.interviewReport.upsert({
+      where: { sessionId },
+      update: {
+        status: InterviewReportStatus.COMPLETED,
+        generatedAt: new Date(),
+        ...report,
+      },
+      create: {
         sessionId,
         status: InterviewReportStatus.COMPLETED,
         createdAt: new Date(),
-        overallScore: report.overallScore,
-        summary: report.summary,
-        communicationScore: report.scores.communication,
-        technicalScore: report.scores.technical,
-        problemSolvingScore: report.scores.problemSolving,
-        confidenceScore: report.scores.confidence,
-        strengths: report.strengths,
-        weaknesses: report.weaknesses,
-        improvements: report.improvements,
-        questionAnalysis: report.questionAnalysis,
-        hiringRecommendation: report.recommendation.decision,
-        recommendationReason: report.recommendation.reason,
-        feedback: {
-          skills: report.skills,
-          nextSteps: report.nextSteps,
-          recommendationConfidence: report.recommendation.confidence,
-        },
+        generatedAt: new Date(),
+        ...report,
+      },
+      include: {
+        session: true,
       },
     });
 

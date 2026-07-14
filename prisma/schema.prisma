@@ -382,23 +382,18 @@ model InterviewReport {
   status      InterviewReportStatus   @default(PENDING)
 
   overallScore Int?
-
-  communicationScore Int?
-  technicalScore     Int?
-  problemSolvingScore Int?
-  confidenceScore     Int?
-
   summary        String?
+
+  scores         Json?
+  
   strengths      String[]
   weaknesses     String[]
   improvements   String[]
+  nextSteps      String[]
 
+  skills         Json?
   questionAnalysis Json?
-
-  hiringRecommendation String?
-  recommendationReason String?
-
-  feedback Json?
+  recommendation   Json?
 
   generatedAt DateTime?
 

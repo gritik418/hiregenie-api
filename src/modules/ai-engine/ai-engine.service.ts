@@ -391,24 +391,25 @@ ${rawText}
     );
 
     const response = await this.model.invoke(messages);
+    const rawText = response.text || response.content.toString();
 
-    const jsonResponse = JSON.parse(response.text);
-
-    const result = InterviewReportResponseSchema.safeParse(jsonResponse);
-
-    if (!result.success) {
+    try {
+      const result = this.extractJSON<InterviewReportResponseDto>(
+        rawText,
+        InterviewReportResponseSchema,
+      );
+      return result;
+    } catch (e) {
       if (isHttpRequest) {
         throw new BadRequestException('Failed to parse AI response');
       } else {
         throw new WsException({
           code: 'INTERVIEW_MESSAGE_RESPONSE_FAILED',
           message: 'Failed to parse AI response',
-          text: response.text,
+          text: rawText,
         });
       }
     }
-
-    return result.data;
   }
 
   async generateResponseInJSON<T>(

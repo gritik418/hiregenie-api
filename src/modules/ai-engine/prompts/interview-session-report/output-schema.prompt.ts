@@ -4,19 +4,34 @@ Do not include markdown blocks, code blocks, or any other text before or after t
 
 {
   "overallScore": <number between 0-100>,
-  "summary": "<string, 20-1000 characters>",
+  "summary": "<string, detailed summary of performance>",
   "scores": {
     "technical": <number between 0-100>,
     "communication": <number between 0-100>,
     "problemSolving": <number between 0-100>,
     "confidence": <number between 0-100>
   },
-  "strengths": ["<string>", ... (3-6 items)],
-  "weaknesses": ["<string>", ... (2-5 items)],
-  "improvements": ["<string>", ... (3-8 items)],
+  "strengths": [
+    "<string, strength 1>",
+    "<string, strength 2>"
+  ],
+  "weaknesses": [
+    "<string, weakness 1>",
+    "<string, weakness 2>"
+  ],
+  "improvements": [
+    "<string, improvement 1>",
+    "<string, improvement 2>"
+  ],
   "skills": {
-    "demonstrated": ["<string>", ...],
-    "missing": ["<string>", ...]
+    "demonstrated": [
+      "<string, skill 1>",
+      "<string, skill 2>"
+    ],
+    "missing": [
+      "<string, missing skill 1>",
+      "<string, missing skill 2>"
+    ]
   },
   "questionAnalysis": [
     {
@@ -28,10 +43,13 @@ Do not include markdown blocks, code blocks, or any other text before or after t
     }
   ],
   "recommendation": {
-    "decision": "STRONG_HIRE" | "HIRE" | "BORDERLINE" | "NO_HIRE",
+    "decision": "<must be one of: STRONG_HIRE, HIRE, BORDERLINE, NO_HIRE>",
     "confidence": <number between 0-100>,
     "reason": "<string>"
   },
-  "nextSteps": ["<string>", ... (3-8 items)]
+  "nextSteps": [
+    "<string, next step 1>",
+    "<string, next step 2>"
+  ]
 }
 `;
